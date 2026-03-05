@@ -1,9 +1,16 @@
 """
-renderer.py
-Funciones de renderizado para pygame con cache de superficies.
+Pygame rendering functions for TileLayer with module-level surface caches.
 
-El cache de superficies es global al modulo para sobrevivir entre frames.
-Se puede limpiar con clear_surface_cache() al cambiar de mapa o tileset.
+The surface caches are global to the module and persist across frames.
+Call :func:`clear_surface_cache` when loading a new map or changing
+the scale factor.
+
+Caches
+------
+_surface_cache
+    ``(firstgid, local_id, flip_h, flip_v, flip_d) -> pygame.Surface``
+_scaled_cache
+    ``(id(surf), width, height) -> pygame.Surface``
 """
 
 from __future__ import annotations
@@ -24,9 +31,25 @@ def get_cached_surface(
     gid: int,
     tilesets: list[Tileset],
 ) -> "pygame.Surface | None":
-    """
-    Devuelve el pygame.Surface correspondiente al GID global.
-    Busca el tileset correcto, decodifica flags y cachea el resultado.
+    """Return the ``pygame.Surface`` for the given raw global tile ID.
+
+    Decodes flip flags from the raw GID, locates the owning tileset,
+    and returns a cached surface. Creates and caches the surface on the
+    first call for each unique ``(tileset, local_id, flags)``
+    combination.
+
+    Parameters
+    ----------
+    gid : int
+        Raw GID value as stored in a TileLayer (may include flip flags).
+    tilesets : list[Tileset]
+        All tilesets for the map, sorted by ``firstgid`` ascending.
+
+    Returns
+    -------
+    pygame.Surface or None
+        The tile surface with ``convert_alpha`` applied, or ``None``
+        if the GID is 0 (empty tile) or not found in any tileset.
     """
     real_gid, flags = decode_gid(gid)
     if real_gid == 0:
@@ -54,17 +77,29 @@ def draw_layer(
     offset: tuple[int, int] = (0, 0),
     scale: int = 1,
 ) -> None:
-    """
-    Dibuja una TileLayer sobre un pygame.Surface.
+    """Render a TileLayer onto a ``pygame.Surface``.
 
-    Args:
-        surface:     pygame.Surface destino.
-        layer:       TileLayer a renderizar.
-        tilesets:    Lista de Tileset del mapa (ordenados por firstgid).
-        tile_width:  Ancho de tile en pixeles del mapa.
-        tile_height: Alto de tile en pixeles del mapa.
-        offset:      Desplazamiento de camara (ox, oy) en pixeles.
-        scale:       Factor de escala entero para pixel-art.
+    Iterates non-empty tiles, applies viewport culling, fetches cached
+    surfaces, and blits each tile. If ``layer.opacity < 1.0`` a surface
+    copy with ``set_alpha()`` is used — one allocation per blit, so
+    keep opacity at ``1.0`` for performance-critical layers.
+
+    Parameters
+    ----------
+    surface : pygame.Surface
+        Render target.
+    layer : TileLayer
+        The tile layer to draw.
+    tilesets : list[Tileset]
+        All tilesets of the map, sorted by ``firstgid`` ascending.
+    tile_width : int
+        Base tile width in pixels (from the map).
+    tile_height : int
+        Base tile height in pixels (from the map).
+    offset : tuple[int, int], optional
+        Camera offset ``(ox, oy)`` in pixels, by default ``(0, 0)``.
+    scale : int, optional
+        Integer scale factor for pixel-art rendering, by default ``1``.
     """
     import pygame
 
@@ -107,7 +142,22 @@ def _get_scaled_surface(
     w: int,
     h: int,
 ) -> "pygame.Surface":
-    """Cache de superficies escaladas para no re-escalar en cada frame."""
+    """Return a scaled copy of a surface, creating and caching it if needed.
+
+    Parameters
+    ----------
+    surf : pygame.Surface
+        Source surface to scale.
+    w : int
+        Target width in pixels.
+    h : int
+        Target height in pixels.
+
+    Returns
+    -------
+    pygame.Surface
+        Scaled surface, cached by ``(id(surf), w, h)``.
+    """
     key = (id(surf), w, h)
     if key not in _scaled_cache:
         import pygame
@@ -116,7 +166,21 @@ def _get_scaled_surface(
 
 
 def _find_tileset(gid: int, tilesets: list[Tileset]) -> Tileset | None:
-    """Busqueda binaria del tileset al que pertenece el GID."""
+    """Find the tileset that owns the given GID using binary search.
+
+    Parameters
+    ----------
+    gid : int
+        Real GID (without flip flags).
+    tilesets : list[Tileset]
+        All tilesets sorted by ``firstgid`` ascending.
+
+    Returns
+    -------
+    Tileset or None
+        The tileset whose ``firstgid`` is the largest value ``<= gid``,
+        or ``None`` if no tileset qualifies.
+    """
     lo, hi = 0, len(tilesets) - 1
     result = None
     while lo <= hi:
@@ -130,13 +194,38 @@ def _find_tileset(gid: int, tilesets: list[Tileset]) -> Tileset | None:
 
 
 def clear_surface_cache() -> None:
-    """Limpia los caches globales de superficies pygame."""
+    """Clear both global pygame surface caches.
+
+    Call this when:
+
+    - Loading a completely different map.
+    - Changing the scale factor at runtime.
+    - Freeing memory.
+
+    Notes
+    -----
+    The next call to :func:`draw_layer` will rebuild both caches from
+    scratch, which may cause a brief stutter on large maps.
+    """
     _surface_cache.clear()
     _scaled_cache.clear()
 
 
 def cache_stats() -> dict:
-    """Devuelve estadisticas del cache para debugging."""
+    """Return current entry counts for both surface caches.
+
+    Returns
+    -------
+    dict
+        Dictionary with keys ``"tile_surfaces"`` and
+        ``"scaled_surfaces"``, each mapping to an integer count.
+
+    Examples
+    --------
+    >>> if frame % 300 == 0:
+    ...     print(cache_stats())
+    {'tile_surfaces': 47, 'scaled_surfaces': 0}
+    """
     return {
         "tile_surfaces": len(_surface_cache),
         "scaled_surfaces": len(_scaled_cache),

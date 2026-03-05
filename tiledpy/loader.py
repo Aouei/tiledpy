@@ -1,13 +1,13 @@
 """
-loader.py
-Parser de archivos TMX de Tiled.
+loader.py — Parser for Tiled TMX map files.
 
-Soporta:
-- Mapas finitos e infinitos (chunks)
-- Encoding CSV y base64 (con compresion zlib/gzip)
-- Tilesets inline y externos (.tsx)
-- Capas de tiles (TileLayer) y de objetos (ObjectLayer)
-- draw_layer() para renderizar con pygame usando el renderer cacheado
+Supports:
+
+- Finite and infinite maps (chunks)
+- CSV and Base64 encoding (with zlib/gzip/zstd compression)
+- Inline and external tilesets (.tsx)
+- Tile layers (:class:`TileLayer`) and object layers (:class:`ObjectLayer`)
+- :meth:`TiledMap.draw_layer` for pygame rendering via the cached renderer
 """
 
 from __future__ import annotations
@@ -32,12 +32,57 @@ LayerType = Union[TileLayer, ObjectLayer]
 
 
 class TiledMap:
-    """
-    Representa un mapa de Tiled cargado desde un archivo .tmx.
+    """A Tiled map loaded from a ``.tmx`` file.
 
-    Uso basico:
-        tmap = TiledMap("mapa.tmx")
-        tmap.draw_layer(screen, "agua", offset=(0, 0))
+    Parses the TMX XML, builds :class:`~tiledpy.tileset.Tileset`,
+    :class:`~tiledpy.layer.TileLayer`, and
+    :class:`~tiledpy.layer.ObjectLayer` objects, and exposes rendering
+    helpers for Pygame.
+
+    Parameters
+    ----------
+    path : str
+        Absolute or relative path to the ``.tmx`` file.
+
+    Attributes
+    ----------
+    path : str
+        Absolute path to the ``.tmx`` file.
+    base_dir : str
+        Directory containing the ``.tmx`` (used to resolve relative
+        paths to images and external tilesets).
+    orientation : str
+        Map orientation: ``"orthogonal"``, ``"isometric"``, etc.
+    render_order : str
+        Tile render order, e.g. ``"right-down"`` (default).
+    width : int
+        Map width in tiles.
+    height : int
+        Map height in tiles.
+    tile_width : int
+        Tile width in pixels.
+    tile_height : int
+        Tile height in pixels.
+    infinite : bool
+        ``True`` if the map uses chunk-based infinite scrolling.
+    background_color : str or None
+        Hex background color string ``"#rrggbb"``, or ``None``.
+    tilesets : list[Tileset]
+        All tilesets sorted by ``firstgid`` ascending.
+    layers : list[TileLayer or ObjectLayer]
+        All layers in draw order.
+    properties : dict
+        Custom map-level properties.
+
+    Raises
+    ------
+    FileNotFoundError
+        If any tileset image referenced by the TMX/TSX is missing.
+
+    Examples
+    --------
+    >>> tmap = TiledMap("map.tmx")
+    >>> tmap.draw_layer(screen, "ground", offset=(cam_x, cam_y))
     """
 
     def __init__(self, path: str) -> None:
@@ -65,15 +110,41 @@ class TiledMap:
     # ------------------------------------------------------------------
 
     def get_layer(self, name: str) -> LayerType | None:
+        """Return the first layer whose name matches.
+
+        Parameters
+        ----------
+        name : str
+            Layer name to look up.
+
+        Returns
+        -------
+        TileLayer or ObjectLayer or None
+            The matching layer, or ``None`` if not found.
+        """
         for layer in self.layers:
             if layer.name == name:
                 return layer
         return None
 
     def get_tile_layers(self) -> list[TileLayer]:
+        """Return all TileLayer instances in draw order.
+
+        Returns
+        -------
+        list[TileLayer]
+            All tile layers from the map.
+        """
         return [l for l in self.layers if isinstance(l, TileLayer)]
 
     def get_object_layers(self) -> list[ObjectLayer]:
+        """Return all ObjectLayer instances in draw order.
+
+        Returns
+        -------
+        list[ObjectLayer]
+            All object layers from the map.
+        """
         return [l for l in self.layers if isinstance(l, ObjectLayer)]
 
     # ------------------------------------------------------------------
@@ -81,7 +152,28 @@ class TiledMap:
     # ------------------------------------------------------------------
 
     def get_tileset_for_gid(self, gid: int) -> Tileset | None:
-        """Devuelve el Tileset al que pertenece el GID global dado."""
+        """Return the Tileset that owns the given global tile ID.
+
+        Uses a linear scan (tilesets are sorted by ``firstgid``),
+        returning the last tileset whose ``firstgid`` is less than or
+        equal to ``gid``.
+
+        Parameters
+        ----------
+        gid : int
+            Global tile ID (without flip flags).
+
+        Returns
+        -------
+        Tileset or None
+            The owning tileset, or ``None`` if no tileset covers this
+            GID.
+
+        Examples
+        --------
+        >>> ts = tmap.get_tileset_for_gid(42)
+        >>> local = ts.global_to_local(42)
+        """
         result = None
         for ts in self.tilesets:
             if ts.firstgid <= gid:
@@ -101,14 +193,26 @@ class TiledMap:
         offset: tuple[int, int] = (0, 0),
         scale: int = 1,
     ) -> None:
-        """
-        Dibuja una TileLayer sobre un pygame.Surface.
+        """Render one named TileLayer onto a ``pygame.Surface``.
 
-        Args:
-            surface:     pygame.Surface destino.
-            layer_name:  Nombre de la capa a dibujar.
-            offset:      Desplazamiento de camara (px) como (x, y).
-            scale:       Factor de escala entero (para pixel-art).
+        Delegates to :func:`tiledpy.renderer.draw_layer`. Tiles outside
+        the surface bounds are skipped (viewport culling). Does nothing
+        if the layer does not exist or is not a :class:`TileLayer`.
+
+        Parameters
+        ----------
+        surface : pygame.Surface
+            Render target.
+        layer_name : str
+            Name of the layer to draw.
+        offset : tuple[int, int], optional
+            Camera offset ``(ox, oy)`` in pixels, by default ``(0, 0)``.
+        scale : int, optional
+            Integer scale factor for pixel-art rendering, by default ``1``.
+
+        Examples
+        --------
+        >>> tmap.draw_layer(screen, "water", offset=(cam_x, cam_y), scale=2)
         """
         from .renderer import draw_layer as _draw_layer
 
@@ -132,7 +236,17 @@ class TiledMap:
         offset: tuple[int, int] = (0, 0),
         scale: int = 1,
     ) -> None:
-        """Dibuja todas las TileLayers visibles en orden."""
+        """Draw all visible TileLayer instances in order.
+
+        Parameters
+        ----------
+        surface : pygame.Surface
+            Render target.
+        offset : tuple[int, int], optional
+            Camera offset ``(ox, oy)`` in pixels, by default ``(0, 0)``.
+        scale : int, optional
+            Integer scale factor for pixel-art rendering, by default ``1``.
+        """
         for layer in self.layers:
             if isinstance(layer, TileLayer) and layer.visible:
                 self.draw_layer(surface, layer.name, offset=offset, scale=scale)
@@ -339,6 +453,19 @@ class TiledMap:
 # ------------------------------------------------------------------
 
 def _parse_properties(elem: ET.Element | None) -> dict:
+    """Parse a Tiled ``<properties>`` XML element into a plain dict.
+
+    Parameters
+    ----------
+    elem : xml.etree.ElementTree.Element or None
+        The ``<properties>`` element, or ``None``.
+
+    Returns
+    -------
+    dict
+        Mapping of property name to typed value (``int``, ``float``,
+        ``bool``, or ``str``).
+    """
     if elem is None:
         return {}
     result = {}
@@ -362,7 +489,31 @@ def _decode_data(
     encoding: str,
     compression: str,
 ) -> list[int]:
-    """Decodifica el contenido de <data> a una lista de GIDs enteros."""
+    """Decode the content of a Tiled ``<data>`` element into a list of GIDs.
+
+    Parameters
+    ----------
+    raw : str
+        Raw text content of the ``<data>`` element.
+    encoding : str
+        Encoding format: ``"csv"``, ``"base64"``, or ``"xml"``.
+    compression : str
+        Compression algorithm applied to base64 data: ``""`` (none),
+        ``"zlib"``, ``"gzip"``, or ``"zstd"``.
+
+    Returns
+    -------
+    list[int]
+        Flat list of raw GID values (uint32, may include flip flags).
+
+    Raises
+    ------
+    ValueError
+        If ``encoding`` is not one of the supported values.
+    ImportError
+        If ``compression="zstd"`` and the ``zstandard`` package is not
+        installed.
+    """
     if encoding == "csv":
         return [int(v) for v in raw.strip().replace("\n", "").split(",") if v.strip()]
 
