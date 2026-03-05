@@ -81,10 +81,12 @@ classDiagram
         +int width
         +int height
         -dict _data
+        -list~Tileset~ _tilesets
         +load_from_flat(data, width, height)
         +load_from_chunks(chunks)
         +get_raw_gid(tx, ty) int
         +iter_tiles() Iterator
+        +get_tile_by_property(prop, value) list
     }
 
     class ObjectLayer {
@@ -116,6 +118,8 @@ classDiagram
     TiledMap "1" --> "0..*" Tileset : tilesets
     TiledMap "1" --> "0..*" TileLayer : layers
     TiledMap "1" --> "0..*" ObjectLayer : layers
+    TiledMap ..> TileLayer : injects _tilesets after parse
+    TileLayer "0..*" --> "0..*" Tileset : _tilesets
     Tileset "1" --> "0..*" TileData : tile_data
     TileData ..> TileFlags : decoded via decode_gid()
     ObjectLayer "1" --> "0..*" TileObject : objects

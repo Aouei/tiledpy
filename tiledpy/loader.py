@@ -283,6 +283,11 @@ class TiledMap:
         # Ordenar tilesets por firstgid ascendente (necesario para get_tileset_for_gid)
         self.tilesets.sort(key=lambda t: t.firstgid)
 
+        # Dar a cada TileLayer acceso directo a los tilesets
+        for layer in self.layers:
+            if isinstance(layer, TileLayer):
+                layer._tilesets = self.tilesets
+
     def _parse_tileset_ref(self, elem: ET.Element) -> Tileset | None:
         firstgid = int(elem.attrib.get("firstgid", 1))
 

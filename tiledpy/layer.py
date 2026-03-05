@@ -9,7 +9,12 @@ the two main layer types exported by the Tiled map editor, plus
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterator
+from typing import TYPE_CHECKING, Any, Iterator
+
+if TYPE_CHECKING:
+    from tiledpy.tileset import Tileset
+
+_MISSING: Any = object()  # Sentinel for optional value parameter
 
 
 @dataclass
@@ -145,6 +150,11 @@ class TileLayer:
 
     Attributes
     ----------
+    _tilesets : list[Tileset]
+        Reference to the map's tilesets, assigned by
+        :class:`~tiledpy.loader.TiledMap` after parsing.  Used internally
+        by :meth:`get_tile_by_property` to resolve tile metadata.
+        Do not modify this list directly.
     min_x : int
         Left-most tile X coordinate (computed after loading data).
     min_y : int
@@ -179,6 +189,9 @@ class TileLayer:
 
         # {(tile_x, tile_y): raw_gid}  — solo tiles no vacios
         self._data: dict[tuple[int, int], int] = {}
+
+        # Referencia a los tilesets del mapa (asignada por TiledMap tras el parseo)
+        self._tilesets: list[Tileset] = []
 
         # Bounding box en coordenadas de tile (calculado al cargar datos)
         self.min_x: int = 0
@@ -302,6 +315,76 @@ class TileLayer:
     def height(self) -> int:
         """int : Computed layer height in tiles (``max_y - min_y + 1``)."""
         return self.max_y - self.min_y + 1 if self._data else 0
+
+    def get_tile_by_property(
+        self,
+        prop: str,
+        value: Any = _MISSING,
+    ) -> list[tuple[int, int]]:
+        """Return tile coordinates where the tile has a given custom property.
+
+        Iterates over all non-empty tiles in the layer, resolves their
+        tileset metadata via ``self._tilesets`` (populated by
+        :class:`~tiledpy.loader.TiledMap` after parsing), and returns the
+        ``(tx, ty)`` positions of tiles whose custom property *prop* matches
+        the requested *value*.
+
+        Parameters
+        ----------
+        prop : str
+            Name of the custom property to search for (as defined in Tiled).
+        value : Any, optional
+            If provided, only tiles whose property *prop* equals this value
+            are returned.  If omitted, every tile that has the property
+            (regardless of its value) is returned.
+
+        Returns
+        -------
+        list[tuple[int, int]]
+            Tile coordinates ``(tx, ty)`` of all matching tiles. Returns an
+            empty list if no tile matches.
+
+        Examples
+        --------
+        Find all spawn-point tiles on a layer:
+
+        >>> spawns = layer.get_tile_by_property("player_spawn", True)
+        >>> pixel_positions = [(tx * tmap.tile_width, ty * tmap.tile_height)
+        ...                    for tx, ty in spawns]
+
+        Find every tile that has the property, regardless of its value:
+
+        >>> blocked = layer.get_tile_by_property("collidable")
+        """
+        from tiledpy.tileset import decode_gid  # lazy to avoid circular import
+
+        result: list[tuple[int, int]] = []
+        for tx, ty, raw_gid in self.iter_tiles():
+            gid, _ = decode_gid(raw_gid)
+            if gid == 0:
+                continue
+
+            # Búsqueda lineal sobre tilesets ordenados por firstgid
+            tileset = None
+            for ts in self._tilesets:
+                if ts.firstgid <= gid:
+                    tileset = ts
+                else:
+                    break
+            if tileset is None:
+                continue
+
+            local_id = tileset.global_to_local(gid)
+            tile_data = tileset.tile_data.get(local_id)
+            if tile_data is None or prop not in tile_data.properties:
+                continue
+
+            if value is not _MISSING and tile_data.properties[prop] != value:
+                continue
+
+            result.append((tx, ty))
+
+        return result
 
     def __repr__(self) -> str:
         return (
