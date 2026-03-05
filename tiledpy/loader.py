@@ -148,6 +148,71 @@ class TiledMap:
         return [l for l in self.layers if isinstance(l, ObjectLayer)]
 
     # ------------------------------------------------------------------
+    # Conversión de coordenadas
+    # ------------------------------------------------------------------
+
+    def world_to_tile(
+        self,
+        x: float,
+        y: float,
+        scale: int = 1,
+    ) -> tuple[int, int]:
+        """Convert world pixel coordinates to tile coordinates.
+
+        Parameters
+        ----------
+        x : float
+            World X position in pixels.
+        y : float
+            World Y position in pixels.
+        scale : int, optional
+            Integer scale factor applied during rendering, by default ``1``.
+
+        Returns
+        -------
+        tuple[int, int]
+            ``(tx, ty)`` tile coordinates (integer, floor division).
+
+        Examples
+        --------
+        >>> tx, ty = tmap.world_to_tile(mouse_x + cam_x, mouse_y + cam_y, scale=2)
+        """
+        tw = self.tile_width  * scale
+        th = self.tile_height * scale
+        return int(x // tw), int(y // th)
+
+    def tile_to_world(
+        self,
+        tx: int,
+        ty: int,
+        scale: int = 1,
+    ) -> tuple[int, int]:
+        """Convert tile coordinates to world pixel coordinates.
+
+        Returns the top-left pixel of the tile.
+
+        Parameters
+        ----------
+        tx : int
+            Tile X coordinate.
+        ty : int
+            Tile Y coordinate.
+        scale : int, optional
+            Integer scale factor applied during rendering, by default ``1``.
+
+        Returns
+        -------
+        tuple[int, int]
+            ``(x, y)`` world position in pixels (top-left corner of the tile).
+
+        Examples
+        --------
+        >>> x, y = tmap.tile_to_world(tx, ty, scale=2)
+        >>> screen.blit(marker, (x - cam_x, y - cam_y))
+        """
+        return tx * self.tile_width * scale, ty * self.tile_height * scale
+
+    # ------------------------------------------------------------------
     # Acceso a tilesets
     # ------------------------------------------------------------------
 
@@ -336,6 +401,7 @@ class TiledMap:
         tile_data: dict[int, TileData] = {}
         for tile_elem in elem.findall("tile"):
             local_id = int(tile_elem.attrib["id"])
+            tile_class = tile_elem.attrib.get("class", tile_elem.attrib.get("type", ""))
             props = _parse_properties(tile_elem.find("properties"))
             collisions = []
             obj_group = tile_elem.find("objectgroup")
@@ -357,6 +423,7 @@ class TiledMap:
                     })
             tile_data[local_id] = TileData(
                 local_id=local_id,
+                tile_class=tile_class,
                 properties=props,
                 collision_objects=collisions,
                 animation=animation,

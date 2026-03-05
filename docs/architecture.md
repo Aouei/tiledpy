@@ -20,6 +20,8 @@ classDiagram
         +get_tile_layers() list~TileLayer~
         +get_object_layers() list~ObjectLayer~
         +get_tileset_for_gid(gid) Tileset
+        +world_to_tile(x, y, scale) tuple
+        +tile_to_world(tx, ty, scale) tuple
         +draw_layer(surface, name, offset, scale)
         +draw_all_layers(surface, offset, scale)
         -_parse(path)
@@ -55,6 +57,7 @@ classDiagram
 
     class TileData {
         +int local_id
+        +str tile_class
         +dict properties
         +list collision_objects
         +list animation

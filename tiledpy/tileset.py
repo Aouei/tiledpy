@@ -86,6 +86,9 @@ class TileData:
     ----------
     local_id : int
         Zero-based local tile ID within the tileset.
+    tile_class : str
+        The Tiled ``class`` attribute of the tile (also known as ``type``
+        in older Tiled versions).  Empty string if not set.
     properties : dict
         Custom properties defined in Tiled for this tile.
     collision_objects : list[dict]
@@ -97,6 +100,7 @@ class TileData:
     """
 
     local_id: int
+    tile_class: str = ""
     properties: dict = field(default_factory=dict)
     collision_objects: list[dict] = field(default_factory=list)
     animation: list[dict] = field(default_factory=list)

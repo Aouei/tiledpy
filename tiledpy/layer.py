@@ -329,14 +329,22 @@ class TileLayer:
         ``(tx, ty)`` positions of tiles whose custom property *prop* matches
         the requested *value*.
 
+        The reserved name ``"Class"`` searches against the tile's Tiled
+        ``class`` attribute (``type`` in older Tiled versions) stored in
+        :attr:`~tiledpy.tileset.TileData.tile_class`, not the custom
+        properties dict.
+
         Parameters
         ----------
         prop : str
-            Name of the custom property to search for (as defined in Tiled).
+            Name of the custom property to search for (as defined in Tiled),
+            or ``"Class"`` to match against the tile's Tiled class attribute.
         value : Any, optional
             If provided, only tiles whose property *prop* equals this value
             are returned.  If omitted, every tile that has the property
-            (regardless of its value) is returned.
+            (regardless of its value) is returned.  When ``prop="Class"``
+            and *value* is omitted, every tile with a non-empty class is
+            returned.
 
         Returns
         -------
@@ -346,18 +354,23 @@ class TileLayer:
 
         Examples
         --------
-        Find all spawn-point tiles on a layer:
+        Find all spawn-point tiles by their Tiled class:
 
-        >>> spawns = layer.get_tile_by_property("player_spawn", True)
+        >>> spawns = layer.get_tile_by_property("Class", "spawn")
         >>> pixel_positions = [(tx * tmap.tile_width, ty * tmap.tile_height)
         ...                    for tx, ty in spawns]
 
-        Find every tile that has the property, regardless of its value:
+        Find all spawn-point tiles by a custom boolean property:
+
+        >>> spawns = layer.get_tile_by_property("player_spawn", True)
+
+        Find every tile that has a property, regardless of its value:
 
         >>> blocked = layer.get_tile_by_property("collidable")
         """
         from tiledpy.tileset import decode_gid  # lazy to avoid circular import
 
+        match_class = prop == "Class"
         result: list[tuple[int, int]] = []
         for tx, ty, raw_gid in self.iter_tiles():
             gid, _ = decode_gid(raw_gid)
@@ -376,11 +389,20 @@ class TileLayer:
 
             local_id = tileset.global_to_local(gid)
             tile_data = tileset.tile_data.get(local_id)
-            if tile_data is None or prop not in tile_data.properties:
+            if tile_data is None:
                 continue
 
-            if value is not _MISSING and tile_data.properties[prop] != value:
-                continue
+            if match_class:
+                candidate = tile_data.tile_class
+                if not candidate:
+                    continue
+                if value is not _MISSING and candidate != value:
+                    continue
+            else:
+                if prop not in tile_data.properties:
+                    continue
+                if value is not _MISSING and tile_data.properties[prop] != value:
+                    continue
 
             result.append((tx, ty))
 
