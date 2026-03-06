@@ -19,17 +19,12 @@ import xml.etree.ElementTree as ET
 import zlib
 from typing import Union
 
+from .enums import OFFSET
 from .layer import ObjectLayer, TileLayer, TileObject
 from .tileset import TileData, Tileset
-
-try:
-    import gzip
-except ImportError:
-    gzip = None  # type: ignore
-
+import gzip
 
 LayerType = Union[TileLayer, ObjectLayer]
-
 
 class TiledMap:
     """A Tiled map loaded from a ``.tmx`` file.
@@ -105,6 +100,10 @@ class TiledMap:
 
         self._parse(path)
 
+    @property
+    def visible_layers(self) -> list[TileLayer]:
+        return [ layer for layer in self.get_tile_layers() if layer.visible ]
+
     # ------------------------------------------------------------------
     # Acceso a capas
     # ------------------------------------------------------------------
@@ -156,7 +155,8 @@ class TiledMap:
         x: float,
         y: float,
         scale: int = 1,
-    ) -> tuple[int, int]:
+        offset : OFFSET = OFFSET.LEFT_TOP,
+    ) -> tuple[int | float, int | float]:
         """Convert world pixel coordinates to tile coordinates.
 
         Parameters
@@ -177,16 +177,19 @@ class TiledMap:
         --------
         >>> tx, ty = tmap.world_to_tile(mouse_x + cam_x, mouse_y + cam_y, scale=2)
         """
+        off_x, off_y = offset.value
+
         tw = self.tile_width  * scale
         th = self.tile_height * scale
-        return int(x // tw), int(y // th)
+        return int(x // tw) + off_x, int(y // th) + off_y
 
     def tile_to_world(
         self,
         tx: int,
         ty: int,
         scale: int = 1,
-    ) -> tuple[int, int]:
+        offset : OFFSET = OFFSET.LEFT_TOP
+    ) -> tuple[int | float, int | float]:
         """Convert tile coordinates to world pixel coordinates.
 
         Returns the top-left pixel of the tile.
@@ -210,7 +213,9 @@ class TiledMap:
         >>> x, y = tmap.tile_to_world(tx, ty, scale=2)
         >>> screen.blit(marker, (x - cam_x, y - cam_y))
         """
-        return tx * self.tile_width * scale, ty * self.tile_height * scale
+        off_x, off_y = offset.value
+
+        return (tx + off_x) * self.tile_width * scale, (ty + off_y) * self.tile_height * scale
 
     # ------------------------------------------------------------------
     # Acceso a tilesets
