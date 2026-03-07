@@ -2,7 +2,7 @@ site_name: tiledpy
 site_description: TMX map loader using Pillow for sprite detection and Pygame for rendering
 site_author: tiledpy contributors
 docs_dir: docs
-repo_url: https://github.com/user/tiledpy
+repo_url: https://github.com/Aouei/tiledpy
 
 theme:
   name: material
