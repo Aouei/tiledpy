@@ -101,7 +101,6 @@ def draw_layer(
     scale : int, optional
         Integer scale factor for pixel-art rendering, by default ``1``.
     """
-    import pygame
 
     ox, oy        = offset
     scaled_tw     = tile_width  * scale
@@ -110,21 +109,25 @@ def draw_layer(
     surf_h        = surface.get_height()
 
     for tx, ty, raw_gid in layer.iter_tiles():
-        px = tx * scaled_tw - ox + int(layer.offset_x * scale)
-        py = ty * scaled_th - oy + int(layer.offset_y * scale)
-
-        # Culling: no dibujar tiles fuera de pantalla
-        if px + scaled_tw < 0 or px > surf_w:
-            continue
-        if py + scaled_th < 0 or py > surf_h:
-            continue
-
         tile_surf = get_cached_surface(raw_gid, tilesets)
         if tile_surf is None:
             continue
 
+        actual_w = tile_surf.get_width()  * scale
+        actual_h = tile_surf.get_height() * scale
+
+        px = tx * scaled_tw - ox + int(layer.offset_x * scale)
+        # Anclar por la base de la celda (igual que Tiled con tiles grandes)
+        py = ty * scaled_th - oy + int(layer.offset_y * scale) + scaled_th - actual_h
+
+        # Culling: no dibujar tiles fuera de pantalla
+        if px + actual_w < 0 or px > surf_w:
+            continue
+        if py + actual_h < 0 or py > surf_h:
+            continue
+
         if scale != 1:
-            tile_surf = _get_scaled_surface(tile_surf, scaled_tw, scaled_th)
+            tile_surf = _get_scaled_surface(tile_surf, actual_w, actual_h)
 
         if layer.opacity < 1.0:
             tile_surf = tile_surf.copy()

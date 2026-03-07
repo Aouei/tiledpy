@@ -97,6 +97,10 @@ class TileData:
     animation : list[dict]
         Animation frames, each with keys ``tileid`` (int) and
         ``duration`` (int, milliseconds).
+    width : int or None
+        Tile width in pixels, or ``None`` if using the tileset default.
+    height : int or None
+        Tile height in pixels, or ``None`` if using the tileset default.
     """
 
     local_id: int
@@ -104,6 +108,8 @@ class TileData:
     properties: dict = field(default_factory=dict)
     collision_objects: list[dict] = field(default_factory=list)
     animation: list[dict] = field(default_factory=list)
+    width: int | None = None
+    height: int | None = None
 
 
 class Tileset:

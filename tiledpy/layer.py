@@ -11,8 +11,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Iterator
 
-if TYPE_CHECKING:
-    from tiledpy.tileset import Tileset
+from tiledpy.tileset import Tileset, decode_gid, TileData
+
 
 _MISSING: Any = object()  # Sentinel for optional value parameter
 
@@ -287,6 +287,23 @@ class TileLayer:
         """
         return self._data.get((tx, ty), 0)
 
+    def get_tile(self, tx : int, ty : int) -> TileData | None:
+        result = None
+
+        raw_gid = self.get_raw_gid(tx, ty)
+        gid, _ = decode_gid(raw_gid)
+
+        if gid in [None, 0]:
+            return result
+        
+        tileset = self.get_tileset_by_gid(gid)
+            
+        if tileset is None:
+            return result
+        
+        local_id = tileset.global_to_local(gid)
+        return tileset.tile_data.get(local_id)
+
     def iter_tiles(self) -> Iterator[tuple[int, int, int]]:
         """Iterate over all non-empty tiles in the layer.
 
@@ -378,12 +395,8 @@ class TileLayer:
                 continue
 
             # Búsqueda lineal sobre tilesets ordenados por firstgid
-            tileset = None
-            for ts in self._tilesets:
-                if ts.firstgid <= gid:
-                    tileset = ts
-                else:
-                    break
+            tileset = self.get_tileset_by_gid(gid)
+            
             if tileset is None:
                 continue
 
@@ -408,6 +421,17 @@ class TileLayer:
 
         return result
 
+    def get_tileset_by_gid(self, gid : int) -> Tileset | None:
+        tileset = None
+
+        for ts in self._tilesets:
+            if ts.firstgid <= gid:
+                tileset = ts
+            else:
+                break
+
+        return tileset
+    
     def __repr__(self) -> str:
         return (
             f"TileLayer(name={self.name!r}, tiles={len(self._data)}, "

@@ -218,6 +218,54 @@ class TiledMap:
         return (tx + off_x) * self.tile_width * scale, (ty + off_y) * self.tile_height * scale
 
     # ------------------------------------------------------------------
+    # Acceso a tiles por coordenada
+    # ------------------------------------------------------------------
+
+    def get_tile_gid(
+        self,
+        tx: int,
+        ty: int,
+        layer_name: str | None = None,
+    ) -> int:
+        """Return the raw GID at tile coordinates ``(tx, ty)``.
+
+        Parameters
+        ----------
+        tx : int
+            Tile X coordinate.
+        ty : int
+            Tile Y coordinate.
+        layer_name : str or None, optional
+            Name of the layer to query. If ``None``, all
+            :class:`~tiledpy.layer.TileLayer` instances are searched in
+            draw order and the first non-zero GID is returned.
+
+        Returns
+        -------
+        int
+            Raw GID (may include flip/rotate flags). Returns ``0`` if
+            the tile is empty or the layer does not exist.
+
+        Examples
+        --------
+        >>> gid = tmap.get_tile_gid(3, 5, "ground")
+        >>> gid = tmap.get_tile_gid(3, 5)          # first non-empty layer
+        """
+        if layer_name is not None:
+            layer = self.get_layer(layer_name)
+            if layer is None or not isinstance(layer, TileLayer):
+                return 0
+            return layer.get_raw_gid(tx, ty)
+
+        for layer in self.layers:
+            if not isinstance(layer, TileLayer):
+                continue
+            gid = layer.get_raw_gid(tx, ty)
+            if gid != 0:
+                return gid
+        return 0
+
+    # ------------------------------------------------------------------
     # Acceso a tilesets
     # ------------------------------------------------------------------
 
@@ -432,6 +480,8 @@ class TiledMap:
                 properties=props,
                 collision_objects=collisions,
                 animation=animation,
+                width=tile_w,
+                height=tile_h,
             )
 
         return Tileset(
