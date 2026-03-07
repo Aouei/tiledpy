@@ -8,20 +8,24 @@ classDiagram
         +str path
         +str base_dir
         +str orientation
+        +str render_order
         +int width
         +int height
         +int tile_width
         +int tile_height
         +bool infinite
+        +str background_color
         +list~Tileset~ tilesets
         +list~LayerType~ layers
         +dict properties
+        +visible_layers list~TileLayer~
         +get_layer(name) LayerType
         +get_tile_layers() list~TileLayer~
         +get_object_layers() list~ObjectLayer~
         +get_tileset_for_gid(gid) Tileset
-        +world_to_tile(x, y, scale) tuple
-        +tile_to_world(tx, ty, scale) tuple
+        +get_tile_gid(tx, ty, layer_name) int
+        +world_to_tile(x, y, scale, offset) tuple
+        +tile_to_world(tx, ty, scale, offset) tuple
         +draw_layer(surface, name, offset, scale)
         +draw_all_layers(surface, offset, scale)
         -_parse(path)
@@ -61,6 +65,8 @@ classDiagram
         +dict properties
         +list collision_objects
         +list animation
+        +int width
+        +int height
     }
 
     class TileFlags {
@@ -88,6 +94,8 @@ classDiagram
         +load_from_flat(data, width, height)
         +load_from_chunks(chunks)
         +get_raw_gid(tx, ty) int
+        +get_tile(tx, ty) TileData
+        +get_tileset_by_gid(gid) Tileset
         +iter_tiles() Iterator
         +get_tile_by_property(prop, value) list
     }
@@ -118,10 +126,24 @@ classDiagram
         +int gid
     }
 
+    class OFFSET {
+        <<enum>>
+        LEFT_TOP
+        MIDDLE_TOP
+        RIGHT_TOP
+        LEFT_MIDDLE
+        CENTER
+        RIGHT_MIDDLE
+        LEFT_BOTTOM
+        MIDDLE_BOTTOM
+        RIGHT_BOTTOM
+    }
+
     TiledMap "1" --> "0..*" Tileset : tilesets
     TiledMap "1" --> "0..*" TileLayer : layers
     TiledMap "1" --> "0..*" ObjectLayer : layers
     TiledMap ..> TileLayer : injects _tilesets after parse
+    TiledMap ..> OFFSET : world_to_tile / tile_to_world
     TileLayer "0..*" --> "0..*" Tileset : _tilesets
     Tileset "1" --> "0..*" TileData : tile_data
     TileData ..> TileFlags : decoded via decode_gid()
@@ -139,7 +161,7 @@ classDiagram
         -dict _surface_cache
         -dict _scaled_cache
         +get_cached_surface(gid, tilesets) Surface
-        +draw_layer(surface, layer, tilesets, ...)
+        +draw_layer(surface, layer, tilesets, tile_width, tile_height, offset, scale)
         +clear_surface_cache()
         +cache_stats() dict
         -_find_tileset(gid, tilesets) Tileset
