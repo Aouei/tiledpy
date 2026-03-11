@@ -27,8 +27,8 @@ class TileObject:
         Unique object ID assigned by Tiled.
     name : str
         Object name.
-    type : str
-        Object type or class (``class`` attribute in Tiled 1.9+).
+    object_class : str
+        Object class (``class`` attribute in Tiled 1.9+, formerly ``type``).
     x : float
         X position in pixels (top-left corner).
     y : float
@@ -49,7 +49,7 @@ class TileObject:
 
     id: int
     name: str
-    type: str
+    object_class: str
     x: float
     y: float
     width: float
@@ -108,20 +108,20 @@ class ObjectLayer:
                 return obj
         return None
 
-    def get_objects_by_type(self, type_: str) -> list[TileObject]:
-        """Return all objects whose type matches.
+    def get_objects_by_class(self, object_class: str) -> list[TileObject]:
+        """Return all objects whose class matches.
 
         Parameters
         ----------
-        type_ : str
-            Object type or class to filter by.
+        object_class : str
+            Object class to filter by.
 
         Returns
         -------
         list[TileObject]
             List of matching objects (may be empty).
         """
-        return [o for o in self.objects if o.type == type_]
+        return [o for o in self.objects if o.object_class == object_class]
 
 
 class TileLayer:

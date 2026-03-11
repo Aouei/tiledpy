@@ -21,7 +21,7 @@ from typing import Union
 
 from .enums import OFFSET
 from .layer import ObjectLayer, TileLayer, TileObject
-from .tileset import TileData, Tileset
+from .tileset import TileData, Tileset, decode_gid
 import gzip
 
 LayerType = Union[TileLayer, ObjectLayer]
@@ -542,10 +542,23 @@ class TiledMap:
     def _parse_object_layer(self, elem: ET.Element) -> ObjectLayer:
         objects = []
         for obj_elem in elem.findall("object"):
+            raw_gid = int(obj_elem.attrib["gid"]) if "gid" in obj_elem.attrib else None
+            object_class = obj_elem.attrib.get("class", obj_elem.attrib.get("type", ""))
+            if not object_class and raw_gid is not None:
+                clean_gid, _ = decode_gid(raw_gid)
+                ts = max(
+                    (t for t in self.tilesets if t.firstgid <= clean_gid),
+                    key=lambda t: t.firstgid,
+                    default=None,
+                )
+                if ts is not None:
+                    td = ts.tile_data.get(clean_gid - ts.firstgid)
+                    if td:
+                        object_class = td.tile_class
             obj = TileObject(
                 id=int(obj_elem.attrib.get("id", 0)),
                 name=obj_elem.attrib.get("name", ""),
-                type=obj_elem.attrib.get("type", obj_elem.attrib.get("class", "")),
+                object_class=object_class,
                 x=float(obj_elem.attrib.get("x", 0)),
                 y=float(obj_elem.attrib.get("y", 0)),
                 width=float(obj_elem.attrib.get("width", 0)),
@@ -553,7 +566,7 @@ class TiledMap:
                 rotation=float(obj_elem.attrib.get("rotation", 0)),
                 visible=obj_elem.attrib.get("visible", "1") != "0",
                 properties=_parse_properties(obj_elem.find("properties")),
-                gid=int(obj_elem.attrib["gid"]) if "gid" in obj_elem.attrib else None,
+                gid=raw_gid,
             )
             objects.append(obj)
 
