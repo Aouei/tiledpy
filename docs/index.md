@@ -1,27 +1,30 @@
 # tiledpy
 
-A Python library for loading Tiled `.tmx` maps, using **Pillow** for sprite
-detection and **Pygame** for hardware-accelerated rendering with cached surfaces.
+A Python library for loading [Tiled](https://www.mapeditor.org/) maps,
+using **Pillow** for sprite extraction and **Pygame** for hardware-accelerated
+rendering with multi-level surface caching.
 
 ---
 
 ## Features
 
-- Parse `.tmx` files (finite and infinite/chunked maps)
-- Load external `.tsx` tilesets or inline definitions
+- Parse `.tmx` (XML) and `.tmj` / `.json` (JSON) map files
+- Finite maps and infinite/chunked maps
 - Encodings: CSV, Base64 + zlib / gzip / zstd
-- Tile flip and rotation flags (`GID_FLIP_H/V/D`)
-- Per-tile properties, collision objects, and animations
-- Pillow-based sprite helpers: empty detection, dominant color
-- Pygame `draw_layer()` with two-level surface cache (tile + scaled)
-- Viewport culling — only draws tiles inside the screen
+- External `.tsx` tilesets and inline definitions
+- Tile flip and rotation flags (`flip_h`, `flip_v`, `flip_d`)
+- Per-tile class, properties, collision objects, and animations
+- `TileData.get_surface(scale)` — static tile surface with scale cache
+- `TileData.get_animated_surface(elapsed_ms, scale)` — animated tile playback
+- `render.draw_all_layers()` with viewport culling and two-level global cache
+- Pillow helpers: `is_empty_tile()`, `get_dominant_color()`
 
 ---
 
 ## Quick install
 
 ```bash
-pip install -e ".[docs]"   # with docs extras
+pip install -e ".[docs]"   # with MkDocs extras
 pip install -e .           # runtime only
 ```
 
@@ -31,13 +34,14 @@ pip install -e .           # runtime only
 
 ```python
 import pygame
-from tiledpy import TiledMap
+from tiledpy import Parser
+import tiledpy.map.render as render
 
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 clock  = pygame.time.Clock()
 
-tmap = TiledMap("map.tmx")
+tmap   = Parser.load("map.tmx")    # .tmx (XML) or .tmj / .json (JSON)
 cam_x, cam_y = 0, 0
 
 running = True
@@ -47,37 +51,41 @@ while running:
             running = False
 
     screen.fill((0, 0, 0))
-    tmap.draw_all_layers(screen, offset=(cam_x, cam_y))
+    render.draw_all_layers(screen, tmap, offset=(cam_x, cam_y), scale=2)
     pygame.display.flip()
     clock.tick(60)
 ```
 
 ---
 
-## High-level loading flow
+## Loading flow
 
 ```mermaid
 flowchart TD
-    A([TiledMap.__init__]) --> B[Parse &lt;map&gt; attributes]
-    B --> C{Has tilesets?}
-    C -- inline --> D[Parse inline tileset]
-    C -- .tsx source --> E[Parse external TSX file]
-    D --> F[Open spritesheet\nwith Pillow]
-    E --> F
-    F --> G[Tileset ready\nfirstgid · columns · tilecount]
-    G --> H{More layers?}
-    H -- tilelayer --> I[Decode data\nCSV / Base64]
-    I --> J{Infinite map?}
-    J -- yes --> K[load_from_chunks]
-    J -- no --> L[load_from_flat]
-    K --> M[TileLayer ready]
-    L --> M
-    H -- objectgroup --> N[Parse TileObject list]
-    N --> O[ObjectLayer ready]
-    M --> P{More layers?}
+    A([Parser.load]) --> B{XML or JSON?}
+    B -- .tmx --> C[xml.etree.parse]
+    B -- .tmj/.json --> D[json.load]
+    C --> E[Parse map attributes]
+    D --> E
+    E --> F{Has tilesets?}
+    F -- .tsx source --> G[Parse external TSX]
+    F -- inline --> H[Parse inline tileset]
+    G --> I[Pillow Image.open spritesheet]
+    H --> I
+    I --> J[Tileset ready\nfirstgid · columns · tilecount]
+    J --> K{More layers?}
+    K -- tilelayer --> L[Decode CSV / Base64]
+    L --> M{Infinite map?}
+    M -- yes --> N[load_from_chunks]
+    M -- no --> O[load_from_flat]
+    N --> P[TileLayer ready]
     O --> P
-    P -- yes --> H
-    P -- no --> Q([TiledMap ready])
+    K -- objectgroup --> Q[Parse TileObject list]
+    Q --> R[ObjectLayer ready]
+    P --> S{More layers?}
+    R --> S
+    S -- yes --> K
+    S -- no --> T([TileMap ready])
 ```
 
 ---
@@ -86,9 +94,13 @@ flowchart TD
 
 ```
 tiledpy/
-├── __init__.py      Public API exports
-├── loader.py        TiledMap — parser + draw_layer()
-├── tileset.py       Tileset — Pillow crop + pygame surface cache
-├── layer.py         TileLayer · ObjectLayer · TileObject
-└── renderer.py      draw_layer() with two-level global cache
+├── __init__.py               Public API exports
+├── map/
+│   ├── map.py                TileMap (data model) + OFFSET enum
+│   ├── parser.py             Parser.load(path) → TileMap
+│   └── render.py             draw_layer / draw_all_layers / clear_cache
+└── layer/
+    ├── tileset.py            Tileset, TileMeta, TileFlags, decode_gid
+    ├── tile.py               TileData (positioned tile), TileLayer
+    └── object.py             TileObject, ObjectLayer
 ```

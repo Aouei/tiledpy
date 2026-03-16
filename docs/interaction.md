@@ -1,140 +1,183 @@
 # Interaction diagrams
 
-## Loading a TMX map
+## Loading a map
 
-Sequence from `TiledMap("map.tmx")` to the moment it's ready to render.
+Sequence from `Parser.load("map.tmx")` to a ready `TileMap`.
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant TM as TiledMap
-    participant ET as xml.etree
+    participant P  as Parser
+    participant ET as xml.etree / json
     participant TS as Tileset
     participant PIL as Pillow (Image)
     participant TL as TileLayer
     participant OL as ObjectLayer
+    participant TM as TileMap
 
-    User->>TM: TiledMap("map.tmx")
-    activate TM
-    TM->>ET: ET.parse("map.tmx")
-    ET-->>TM: root Element
+    User->>P: Parser.load("map.tmx")
+    activate P
+    P->>ET: parse file (XML or JSON)
+    ET-->>P: parsed data
 
-    loop for each <tileset> in root
+    loop for each tileset
         alt source=".tsx"
-            TM->>ET: ET.parse("tileset.tsx")
-            ET-->>TM: tsx root Element
+            P->>ET: parse external TSX
+            ET-->>P: tsx data
         end
-        TM->>PIL: Image.open(image_path).convert("RGBA")
-        PIL-->>TM: spritesheet Image
-        TM->>TS: Tileset(name, firstgid, sheet, ...)
-        TS-->>TM: Tileset instance
+        P->>PIL: Image.open(image_path).convert("RGBA")
+        PIL-->>P: spritesheet Image
+        P->>TS: Tileset(name, firstgid, sheet, ...)
+        TS-->>P: Tileset instance
     end
 
-    loop for each layer in root
-        alt tag == "layer"
-            TM->>TL: TileLayer(id, name, ...)
-            TM->>TM: _decode_data(encoding, compression)
+    loop for each layer
+        alt tile layer
+            P->>TL: TileLayer(id, name, ...)
+            P->>P: decode data (CSV / Base64)
             alt infinite map
-                TM->>TL: load_from_chunks(chunks)
+                P->>TL: load_from_chunks(chunks)
             else finite map
-                TM->>TL: load_from_flat(data, w, h)
+                P->>TL: load_from_flat(data, w, h)
             end
-            TL-->>TM: TileLayer ready
-        else tag == "objectgroup"
-            TM->>OL: ObjectLayer(id, name, objects, ...)
-            OL-->>TM: ObjectLayer ready
+            TL-->>P: TileLayer ready
+        else object layer
+            P->>OL: ObjectLayer(id, name, objects, ...)
+            OL-->>P: ObjectLayer ready
         end
     end
 
-    TM-->>User: TiledMap ready
-    deactivate TM
+    P->>TM: assemble TileMap
+    TM-->>User: TileMap ready
+    deactivate P
 ```
 
 ---
 
-## draw_layer() — one frame
+## render.draw_all_layers() — one frame
 
-Full call chain from `tmap.draw_layer(screen, "ground")` down to `surface.blit`.
+Full call chain from `render.draw_all_layers(screen, tmap, ...)` to `surface.blit`.
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant TM as TiledMap
-    participant R as renderer
-    participant RC as _surface_cache (dict)
+    participant R  as render module
+    participant SC as _surface_cache (dict)
     participant TS as Tileset
     participant PIL as Pillow (Image)
     participant PG as pygame
 
-    User->>TM: draw_layer(screen, "ground", offset)
-    TM->>R: draw_layer(surface, layer, tilesets, ...)
+    User->>R: draw_all_layers(screen, tmap, offset, scale)
 
-    loop for each (tx, ty, raw_gid) in layer.iter_tiles()
-        R->>R: culling check (viewport bounds)
-        alt tile outside viewport
-            R-->>R: skip
-        else tile inside viewport
-            R->>R: decode_gid(raw_gid) → real_gid, TileFlags
-            R->>RC: lookup (firstgid, local_id, fh, fv, fd)
-            alt cache hit
-                RC-->>R: pygame.Surface
-            else cache miss
-                R->>TS: get_pygame_surface(local_id, flags)
-                TS->>TS: lookup _pil_cache[local_id]
-                alt PIL cache miss
-                    TS->>PIL: sheet.crop(x, y, x+tw, y+th)
-                    PIL-->>TS: tile Image
-                    TS->>TS: store in _pil_cache
+    loop for each visible TileLayer
+        R->>R: draw_layer(surface, layer, ...)
+
+        loop for each (tx, ty), raw_gid in layer._data
+            R->>R: viewport culling check
+            alt tile outside viewport
+                R-->>R: skip
+            else tile inside viewport
+                R->>R: decode_gid(raw_gid) → real_gid, TileFlags
+                R->>SC: lookup (firstgid, local_id, fh, fv, fd)
+                alt cache hit
+                    SC-->>R: pygame.Surface
+                else cache miss
+                    R->>TS: get_pygame_surface(local_id, flags)
+                    TS->>TS: lookup _pil_cache[local_id]
+                    alt PIL cache miss
+                        TS->>PIL: sheet.crop(box)
+                        PIL-->>TS: tile Image
+                        TS->>TS: store in _pil_cache
+                    end
+                    opt flip_h or flip_v or flip_d
+                        TS->>PIL: img.transpose(...)
+                        PIL-->>TS: flipped Image
+                    end
+                    TS->>PG: pygame.image.fromstring(...).convert_alpha()
+                    PG-->>TS: pygame.Surface
+                    TS-->>R: pygame.Surface
+                    R->>SC: store surface
                 end
-                opt flags.flip_d or flip_h or flip_v
-                    TS->>PIL: img.transpose(...)
-                    PIL-->>TS: flipped Image
+                opt scale != 1
+                    R->>R: _get_scaled (scaled cache)
+                    R->>PG: pygame.transform.scale(surf, (w, h))
+                    PG-->>R: scaled Surface
                 end
-                TS->>PIL: img.tobytes()
-                PIL-->>TS: raw bytes
-                TS->>PG: pygame.image.fromstring(...).convert_alpha()
-                PG-->>TS: pygame.Surface
-                TS-->>R: pygame.Surface
-                R->>RC: store surface
+                R->>PG: surface.blit(tile_surf, (px, py))
             end
-            opt scale != 1
-                R->>R: _get_scaled_surface (scaled cache)
-                R->>PG: pygame.transform.scale(surf, (w,h))
-                PG-->>R: scaled Surface
-            end
-            R->>PG: surface.blit(tile_surf, (px, py))
         end
     end
 
-    R-->>TM: done
-    TM-->>User: (returns None)
+    R-->>User: (returns None)
 ```
 
 ---
 
-## Tileset sprite detection (Pillow helpers)
+## TileData.get_animated_surface() — animated tile
+
+Per-tile call used when rendering animated tiles directly (e.g. in a custom loop).
 
 ```mermaid
 sequenceDiagram
-    actor Dev
+    actor User
+    participant TD as TileData
+    participant TM as TileMeta
     participant TS as Tileset
-    participant PIL as Pillow (Image)
+    participant PIL as Pillow
+    participant PG as pygame
 
-    Dev->>TS: is_empty_tile(local_id)
-    TS->>TS: get_tile_image(local_id)
-    TS->>PIL: sheet.crop(x, y, w, h)
-    PIL-->>TS: RGBA Image
-    TS->>PIL: img.split() → r,g,b,a
-    TS->>PIL: a.getextrema()
-    PIL-->>TS: (min_alpha, max_alpha)
-    TS-->>Dev: max_alpha == 0  → True/False
+    User->>TD: get_animated_surface(elapsed_ms, scale)
+    TD->>TM: check meta.animation
+    alt no animation
+        TD->>TD: get_surface(scale)
+        TD-->>User: static pygame.Surface
+    else has animation frames
+        TD->>TD: _resolve_frame(elapsed_ms)
+        note over TD: elapsed_ms % total_duration\nwalk frame list
+        TD-->>TD: frame_local_id
+        TD->>TS: get_pygame_surface(frame_local_id, flags)
+        alt pygame cache hit
+            TS-->>TD: pygame.Surface
+        else cache miss
+            TS->>PIL: crop + convert
+            PIL-->>TS: Surface
+            TS-->>TD: pygame.Surface
+        end
+        opt scale != 1
+            TD->>PG: pygame.transform.scale (module _scaled_cache)
+            PG-->>TD: scaled Surface
+        end
+        TD-->>User: animated pygame.Surface
+    end
+```
 
-    Dev->>TS: get_dominant_color(local_id)
-    TS->>TS: get_tile_image(local_id)
-    TS->>PIL: img.getdata()
-    PIL-->>TS: pixel list [(r,g,b,a), ...]
-    TS->>TS: filter alpha > 0, average RGB
-    TS-->>Dev: (r, g, b)
+---
+
+## TileLayer query flow
+
+Querying tiles by class or property and using the resulting `TileData`.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant TL as TileLayer
+    participant TD as TileData
+
+    User->>TL: get_tiles_by_class("spike")
+    TL->>TL: iter_tiles()
+    loop for each (tx, ty), raw_gid
+        TL->>TL: decode_gid + _find_tileset
+        TL->>TD: TileData(tx, ty, local_id, tileset, ...)
+        TD-->>TL: TileData instance
+        TL->>TD: tile.tile_class (delegates to TileMeta)
+        alt matches "spike"
+            TL->>TL: append to result
+        end
+    end
+    TL-->>User: list[TileData]
+
+    User->>TD: td.get_surface(scale=2)
+    TD-->>User: pygame.Surface
 ```
 
 ---
@@ -145,21 +188,22 @@ sequenceDiagram
 stateDiagram-v2
     [*] --> Empty : module imported
 
-    Empty --> TileCached : first draw_layer() call\nfor a given GID
-    TileCached --> TileCached : subsequent frames\n(cache hit, no allocation)
+    Empty --> TileCached : first draw call for a GID
+    TileCached --> TileCached : subsequent frames (cache hit)
 
-    TileCached --> ScaleCached : scale != 1\nfirst occurrence
-    ScaleCached --> ScaleCached : subsequent frames\n(scaled cache hit)
+    TileCached --> ScaleCached : scale != 1, first occurrence
+    ScaleCached --> ScaleCached : subsequent frames (scaled hit)
 
-    TileCached --> Empty : clear_surface_cache()
-    ScaleCached --> Empty : clear_surface_cache()
+    TileCached --> Empty : render.clear_cache()
+    ScaleCached --> Empty : render.clear_cache()
 
     note right of TileCached
-        key: (firstgid, local_id,
-              flip_h, flip_v, flip_d)
+        render._surface_cache key:
+        (firstgid, local_id, fh, fv, fd)
     end note
 
     note right of ScaleCached
-        key: (id(surf), width, height)
+        render._scaled_cache key:
+        (id(surf), width, height)
     end note
 ```

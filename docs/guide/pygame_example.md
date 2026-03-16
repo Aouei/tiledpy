@@ -1,7 +1,7 @@
 # Complete Pygame example
 
-This guide walks through a fully working game loop that loads a TMX map,
-scrolls the camera with the arrow keys, and renders every layer in order.
+This guide walks through a working game loop that loads a Tiled map,
+scrolls the camera, renders all layers, and plays tile animations.
 
 ---
 
@@ -11,71 +11,200 @@ scrolls the camera with the arrow keys, and renders every layer in order.
 pip install tiledpy pygame pillow
 ```
 
-Your project directory should look like:
+Project layout:
 
 ```
 game/
 ├── main.py
-├── map.tmx
-├── tileset.tsx          (optional external tileset)
+├── map.tmx           (or map.tmj)
+├── tileset.tsx       (optional external tileset)
 └── sprites/
     └── tileset.png
 ```
 
 ---
 
-## Full example
+## Loading a map
+
+```python
+from tiledpy import Parser
+
+# TMX (XML) — classic Tiled format
+tmap = Parser.load("map.tmx")
+
+# TMJ / JSON — modern Tiled format
+tmap = Parser.load("map.tmj")
+
+# Inspect basic attributes
+print(tmap.width, tmap.height)         # map size in tiles
+print(tmap.tile_width, tmap.tile_height)  # tile size in pixels
+print([l.name for l in tmap.layers])   # layer names in draw order
+```
+
+---
+
+## Rendering all layers (static)
+
+Use `render.draw_all_layers()` for the simplest full-map render.
+It iterates all visible `TileLayer` instances in order, applies viewport
+culling, and draws via a two-level surface cache.
+
+```python
+import pygame
+from tiledpy import Parser
+import tiledpy.map.render as render
+
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+clock  = pygame.time.Clock()
+
+tmap   = Parser.load("map.tmx")
+scale  = 2
+cam_x, cam_y = 0, 0
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    screen.fill((30, 30, 30))
+    render.draw_all_layers(screen, tmap, offset=(cam_x, cam_y), scale=scale)
+    pygame.display.flip()
+    clock.tick(60)
+```
+
+---
+
+## Rendering animated tiles
+
+To play tile animations you must drive the render loop yourself using
+`TileData.get_animated_surface(elapsed_ms, scale)`.
+For static tiles it falls back to `get_surface()` automatically.
+
+```python
+import pygame
+from tiledpy import Parser, TileLayer
+from tiledpy.layer.tile import clear_tile_cache
+
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+clock  = pygame.time.Clock()
+
+tmap  = Parser.load("map.tmj")
+scale = 3
+cam_x, cam_y = 0, 0
+
+scaled_tw = tmap.tile_width  * scale
+scaled_th = tmap.tile_height * scale
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    t_ms = pygame.time.get_ticks()
+    screen.fill((30, 30, 30))
+
+    for layer in tmap.get_tile_layers():
+        if not layer.visible:
+            continue
+        for tile in layer.iter_tiles():
+            # Returns current animation frame, or static surface if not animated
+            surf = tile.get_animated_surface(t_ms, scale)
+
+            px = tile.tx * scaled_tw - cam_x + int(layer.offset_x * scale)
+            # Bottom-anchor: aligns tall sprites to the bottom of the cell
+            py = (tile.ty * scaled_th - cam_y
+                  + int(layer.offset_y * scale)
+                  + scaled_th - surf.get_height())
+
+            # Viewport culling
+            if px + surf.get_width() < 0 or px > screen.get_width():
+                continue
+            if py + surf.get_height() < 0 or py > screen.get_height():
+                continue
+
+            screen.blit(surf, (px, py))
+
+    pygame.display.flip()
+    clock.tick(60)
+```
+
+---
+
+## Static surface for a single tile
+
+`TileData.get_surface(scale)` returns the tile's pygame surface at the
+requested scale. Flip flags are applied automatically.
+
+```python
+layer = tmap.get_layer("ground")
+tile  = layer.get_tile(tx=4, ty=3)
+
+if tile is not None:
+    surf = tile.get_surface(scale=2)
+    screen.blit(surf, (tile.tx * 32, tile.ty * 32))
+```
+
+---
+
+## Zoom in / out
+
+When the scale changes, clear the surface caches to free stale entries.
+
+```python
+from tiledpy.layer.tile import clear_tile_cache
+import tiledpy.map.render as render
+
+# Zoom in (+) or out (-)
+new_scale = max(1, min(scale + 1, 6))
+if new_scale != scale:
+    scale = new_scale
+    render.clear_cache()      # clears render module caches
+    clear_tile_cache()        # clears TileData scaled cache
+```
+
+---
+
+## Full example with camera + zoom + debug overlay
 
 ```python
 """
-main.py — Complete tiledpy + pygame example.
+main.py — tiledpy full example with camera, zoom, and debug.
 
 Controls:
-    Arrow keys  Move camera
-    +/-         Zoom in/out (integer scale)
-    D           Toggle debug overlay
-    ESC / Q     Quit
+    Arrow keys / WASD   Scroll camera
+    + / -               Zoom in / out (scale 1–6)
+    D                   Toggle debug overlay
+    ESC / Q             Quit
 """
 
 import sys
 import pygame
-from tiledpy import TiledMap
-from tiledpy.renderer import cache_stats, clear_surface_cache
+from tiledpy import Parser, TileMap
+import tiledpy.map.render as render
 
-
-# ---------------------------------------------------------------------------
-# Camera
-# ---------------------------------------------------------------------------
 
 class Camera:
-    """Tracks a pixel offset with clamped scrolling."""
-
     def __init__(self, map_pixel_w: int, map_pixel_h: int,
                  screen_w: int, screen_h: int) -> None:
-        self.x = 0
-        self.y = 0
-        self.map_w = map_pixel_w
-        self.map_h = map_pixel_h
-        self.screen_w = screen_w
-        self.screen_h = screen_h
+        self.x, self.y = 0, 0
+        self.map_w, self.map_h = map_pixel_w, map_pixel_h
+        self.screen_w, self.screen_h = screen_w, screen_h
 
     def move(self, dx: int, dy: int) -> None:
-        self.x = max(0, min(self.x + dx, self.map_w - self.screen_w))
-        self.y = max(0, min(self.y + dy, self.map_h - self.screen_h))
+        self.x = max(0, min(self.x + dx, max(0, self.map_w - self.screen_w)))
+        self.y = max(0, min(self.y + dy, max(0, self.map_h - self.screen_h)))
 
     @property
     def offset(self) -> tuple[int, int]:
         return self.x, self.y
 
 
-# ---------------------------------------------------------------------------
-# Debug overlay
-# ---------------------------------------------------------------------------
-
-def draw_debug(screen: pygame.Surface, tmap: TiledMap,
-               camera: Camera, clock: pygame.time.Clock,
-               scale: int, font: pygame.font.Font) -> None:
-    stats = cache_stats()
+def draw_debug(screen, tmap, camera, clock, scale, font):
+    stats = render.cache_stats()
     lines = [
         f"FPS: {clock.get_fps():.0f}",
         f"Camera: ({camera.x}, {camera.y})",
@@ -88,54 +217,44 @@ def draw_debug(screen: pygame.Surface, tmap: TiledMap,
         f"Scaled cache:  {stats['scaled_surfaces']} entries",
     ]
     for i, line in enumerate(lines):
-        shadow = font.render(line, True, (0, 0, 0))
-        text   = font.render(line, True, (255, 255, 200))
-        screen.blit(shadow, (11, 11 + i * 18))
-        screen.blit(text,   (10, 10 + i * 18))
+        screen.blit(font.render(line, True, (0,   0,   0)),   (11, 11 + i * 18))
+        screen.blit(font.render(line, True, (255, 255, 200)), (10, 10 + i * 18))
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
-def main(tmx_path: str = "map.tmx") -> None:
+def main(map_path: str) -> None:
     pygame.init()
     pygame.display.set_caption("tiledpy demo")
 
     SCREEN_W, SCREEN_H = 800, 600
-    SCROLL_SPEED = 4        # pixels per frame (before scale)
+    SCROLL_SPEED = 4
     INITIAL_SCALE = 2
 
     screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
     clock  = pygame.time.Clock()
     font   = pygame.font.SysFont("monospace", 14)
 
-    # ---- Load map ----------------------------------------------------------
-    tmap  = TiledMap(tmx_path)
+    tmap  = Parser.load(map_path)
     scale = INITIAL_SCALE
 
-    map_pixel_w = tmap.width  * tmap.tile_width  * scale
-    map_pixel_h = tmap.height * tmap.tile_height * scale
-    camera = Camera(map_pixel_w, map_pixel_h, SCREEN_W, SCREEN_H)
+    def make_camera():
+        return Camera(
+            tmap.width  * tmap.tile_width  * scale,
+            tmap.height * tmap.tile_height * scale,
+            SCREEN_W, SCREEN_H,
+        )
 
-    # ---- Resolve background color ------------------------------------------
+    camera = make_camera()
+
     if tmap.background_color:
         hex_color = tmap.background_color.lstrip("#")
         bg_color  = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
     else:
         bg_color = (30, 30, 30)
 
-    # ---- Print layer info --------------------------------------------------
-    for layer in tmap.layers:
-        print(f"  layer: {layer.name!r}  visible={layer.visible}")
-
     show_debug = False
 
-    # ---- Game loop ---------------------------------------------------------
     running = True
     while running:
-
-        # -- Events ----------------------------------------------------------
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -144,26 +263,19 @@ def main(tmx_path: str = "map.tmx") -> None:
                     running = False
                 elif event.key == pygame.K_d:
                     show_debug = not show_debug
-                elif event.key == pygame.K_PLUS:
-                    new_scale = min(scale + 1, 6)
-                    if new_scale != scale:
-                        scale = new_scale
-                        clear_surface_cache()
-                        map_pixel_w = tmap.width  * tmap.tile_width  * scale
-                        map_pixel_h = tmap.height * tmap.tile_height * scale
-                        camera = Camera(map_pixel_w, map_pixel_h,
-                                        SCREEN_W, SCREEN_H)
+                elif event.key in (pygame.K_PLUS, pygame.K_EQUALS):
+                    new = min(scale + 1, 6)
+                    if new != scale:
+                        scale = new
+                        render.clear_cache()
+                        camera = make_camera()
                 elif event.key == pygame.K_MINUS:
-                    new_scale = max(scale - 1, 1)
-                    if new_scale != scale:
-                        scale = new_scale
-                        clear_surface_cache()
-                        map_pixel_w = tmap.width  * tmap.tile_width  * scale
-                        map_pixel_h = tmap.height * tmap.tile_height * scale
-                        camera = Camera(map_pixel_w, map_pixel_h,
-                                        SCREEN_W, SCREEN_H)
+                    new = max(scale - 1, 1)
+                    if new != scale:
+                        scale = new
+                        render.clear_cache()
+                        camera = make_camera()
 
-        # -- Camera scroll ---------------------------------------------------
         keys = pygame.key.get_pressed()
         dx = dy = 0
         if keys[pygame.K_LEFT]  or keys[pygame.K_a]: dx -= SCROLL_SPEED * scale
@@ -172,11 +284,8 @@ def main(tmx_path: str = "map.tmx") -> None:
         if keys[pygame.K_DOWN]  or keys[pygame.K_s]: dy += SCROLL_SPEED * scale
         camera.move(dx, dy)
 
-        # -- Draw ------------------------------------------------------------
         screen.fill(bg_color)
-
-        # Draw every visible tile layer in order
-        tmap.draw_all_layers(screen, offset=camera.offset, scale=scale)
+        render.draw_all_layers(screen, tmap, offset=camera.offset, scale=scale)
 
         if show_debug:
             draw_debug(screen, tmap, camera, clock, scale, font)
@@ -195,20 +304,6 @@ if __name__ == "__main__":
 
 ---
 
-## Running it
-
-```bash
-python main.py map.tmx
-```
-
-Or pass any TMX path:
-
-```bash
-python main.py "../TileMap/Map.tmx"
-```
-
----
-
 ## Controls reference
 
 | Key | Action |
@@ -220,46 +315,17 @@ python main.py "../TileMap/Map.tmx"
 
 ---
 
-## Drawing individual layers
-
-You can control which layers to draw and in what order:
-
-```python
-# Draw only the ground layer below the player
-tmap.draw_layer(screen, "ground", offset=camera.offset, scale=scale)
-
-# --- draw player sprite here ---
-screen.blit(player_surf, player_screen_pos)
-
-# Draw the "above" layer on top of the player
-tmap.draw_layer(screen, "above", offset=camera.offset, scale=scale)
-```
-
----
-
 ## Querying layers
 
 ```python
 # All tile layers in draw order
 tile_layers = tmap.get_tile_layers()
 
-# All object layers in draw order
+# All object layers
 object_layers = tmap.get_object_layers()
 
-# Only visible tile layers (shorthand property)
-for layer in tmap.visible_layers:
-    print(layer.name)
-```
-
-Use `get_tile_gid()` to read the raw GID at a position without going through
-a layer reference directly:
-
-```python
-# From a specific layer
-raw = tmap.get_tile_gid(tx, ty, "ground")
-
-# From the first non-empty layer at those coords
-raw = tmap.get_tile_gid(tx, ty)
+# Layer by name (returns TileLayer or ObjectLayer)
+ground = tmap.get_layer("ground")
 ```
 
 ---
@@ -267,38 +333,78 @@ raw = tmap.get_tile_gid(tx, ty)
 ## Reading object layers
 
 ```python
-entities_layer = tmap.get_layer("entities")
+entities = tmap.get_layer("entities")
 
-# Place the player at the spawn point
-spawn = entities_layer.get_object("player_spawn")
+# Find the player spawn point
+spawn = entities.get_object("player_spawn")
 if spawn:
-    player_world_x = spawn.x
-    player_world_y = spawn.y
+    player_x = spawn.x
+    player_y = spawn.y
 
-# Iterate all enemies
-for obj in entities_layer.get_objects_by_type("enemy"):
+# Iterate enemies (object_class set in Tiled)
+for obj in entities.get_objects_by_class("enemy"):
     enemy_list.append(Enemy(obj.x, obj.y, obj.properties))
+
+# Width/height accept a scale parameter
+w = obj.width(scale=2)
+h = obj.height(scale=2)
+```
+
+---
+
+## Collision detection using tile properties
+
+```python
+collision = tmap.get_layer("collision")
+
+def tile_is_solid(tx: int, ty: int) -> bool:
+    td = collision.get_tile(tx, ty)
+    return bool(td and td.properties.get("collision", False))
+
+# Check if the player's feet are on a solid tile
+foot_x, foot_y = player_rect.midbottom
+tx, ty = tmap.world_to_tile(foot_x + cam_x, foot_y + cam_y, scale=scale)
+if tile_is_solid(tx, ty):
+    player.on_ground = True
+```
+
+---
+
+## Filtering tiles by class or property
+
+```python
+layer = tmap.get_layer("hazards")
+
+# All tiles whose Tiled class is "spike"
+spikes = layer.get_tiles_by_class("spike")
+
+# All tiles with a custom bool property "lethal" = True
+lethal = layer.get_tiles_by_property("lethal", True)
+
+# All tiles that have a "damage" property (any value)
+damaging = layer.get_tiles_by_property("damage")
+
+# All animated tiles on a layer (unique by local_id)
+animated = layer.get_animated_tiles()
+for tile in animated:
+    print(f"  ({tile.tx},{tile.ty}) frames={len(tile.meta.animation)}")
 ```
 
 ---
 
 ## Coordinate conversion
 
-`TiledMap` provides built-in helpers to convert between world pixels and tile
-coordinates. Both accept an optional `scale` (integer render scale) and an
-`OFFSET` enum value that shifts the anchor point used for the conversion.
-
 ```python
-from tiledpy.enums import OFFSET
+from tiledpy import OFFSET
 
-# World pixel → tile (default anchor: top-left corner of the tile)
+# World pixel → tile
 tx, ty = tmap.world_to_tile(mouse_x + cam_x, mouse_y + cam_y, scale=2)
 
-# Tile → world pixel (returns the top-left corner of the tile)
+# Tile → world pixel (top-left of cell)
 wx, wy = tmap.tile_to_world(tx, ty, scale=2)
-screen.blit(highlight_surf, (wx - cam_x, wy - cam_y))
+screen.blit(highlight, (wx - cam_x, wy - cam_y))
 
-# Use OFFSET.CENTER to snap to tile centers instead of top-left corners
+# Center anchor
 cx, cy = tmap.tile_to_world(tx, ty, scale=2, offset=OFFSET.CENTER)
 ```
 
@@ -308,84 +414,17 @@ Available `OFFSET` values: `LEFT_TOP`, `MIDDLE_TOP`, `RIGHT_TOP`,
 
 ---
 
-## Collision detection using tile properties
-
-`TileLayer.get_tile(tx, ty)` resolves the full `TileData` for a tile in one
-call — no need to manually decode the GID, look up the tileset, and index
-`tile_data`:
-
-```python
-collision_layer = tmap.get_layer("collision")
-
-def tile_is_solid(tx: int, ty: int) -> bool:
-    td = collision_layer.get_tile(tx, ty)
-    if td is None:
-        return False
-    return bool(td.properties.get("collision", False))
-
-
-# Example: check if player's feet are on a solid tile
-foot_x, foot_y = player_rect.midbottom
-tx, ty = tmap.world_to_tile(foot_x, foot_y)   # uses built-in helper
-if tile_is_solid(tx, ty):
-    player.on_ground = True
-```
-
-You can also look up tiles by a Tiled class or any custom property directly on
-the layer:
-
-```python
-# All tiles whose Tiled class is "spike"
-spike_coords = collision_layer.get_tile_by_property("Class", "spike")
-
-# All tiles where the custom bool property "lethal" is True
-lethal_coords = collision_layer.get_tile_by_property("lethal", True)
-
-# All tiles that have a "damage" property (any value)
-damaging = collision_layer.get_tile_by_property("damage")
-```
-
----
-
 ## Inspect sprite data with Pillow
 
 ```python
-from tiledpy.tileset import decode_gid
-
 layer = tmap.get_layer("decorations")
 
-# Get dominant color of every unique tile
 seen = set()
-for tx, ty, raw in layer.iter_tiles():
-    real_gid, flags = decode_gid(raw)
-    if real_gid in seen:
+for tile in layer.iter_tiles():
+    key = (tile.tileset.firstgid, tile.local_id)
+    if key in seen:
         continue
-    seen.add(real_gid)
-    ts = tmap.get_tileset_for_gid(real_gid)
-    if ts:
-        lid = ts.global_to_local(real_gid)
-        r, g, b = ts.get_dominant_color(lid)
-        print(f"GID {real_gid:4d} → rgb({r},{g},{b})")
-```
-
----
-
-## Architecture of the example
-
-```mermaid
-flowchart TD
-    A([main]) --> B[TiledMap.load]
-    B --> C[Camera init]
-    C --> D{Game loop}
-    D --> E[Handle events\nquit · zoom · debug]
-    E --> F[Camera scroll\narrow keys]
-    F --> G[screen.fill bg]
-    G --> H[draw_all_layers\noffset=camera.offset]
-    H --> I{show_debug?}
-    I -- yes --> J[draw_debug overlay\nFPS · cache stats]
-    I -- no --> K
-    J --> K[pygame.display.flip]
-    K --> L[clock.tick 60]
-    L --> D
-    D -- quit --> M([pygame.quit])
+    seen.add(key)
+    r, g, b = tile.tileset.get_dominant_color(tile.local_id)
+    print(f"({tile.tx},{tile.ty}) local_id={tile.local_id} → rgb({r},{g},{b})")
 ```
