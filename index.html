@@ -445,10 +445,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#high-level-loading-flow" class="md-nav__link">
+  <a href="#loading-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        High-level loading flow
+        Loading flow
       
     </span>
   </a>
@@ -868,79 +868,91 @@
 
 
 <h1 id="tiledpy">tiledpy<a class="headerlink" href="#tiledpy" title="Permanent link">&para;</a></h1>
-<p>A Python library for loading Tiled <code>.tmx</code> maps, using <strong>Pillow</strong> for sprite
-detection and <strong>Pygame</strong> for hardware-accelerated rendering with cached surfaces.</p>
+<p>A Python library for loading <a href="https://www.mapeditor.org/">Tiled</a> maps,
+using <strong>Pillow</strong> for sprite extraction and <strong>Pygame</strong> for hardware-accelerated
+rendering with multi-level surface caching.</p>
 <hr />
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Parse <code>.tmx</code> files (finite and infinite/chunked maps)</li>
-<li>Load external <code>.tsx</code> tilesets or inline definitions</li>
+<li>Parse <code>.tmx</code> (XML) and <code>.tmj</code> / <code>.json</code> (JSON) map files</li>
+<li>Finite maps and infinite/chunked maps</li>
 <li>Encodings: CSV, Base64 + zlib / gzip / zstd</li>
-<li>Tile flip and rotation flags (<code>GID_FLIP_H/V/D</code>)</li>
-<li>Per-tile properties, collision objects, and animations</li>
-<li>Pillow-based sprite helpers: empty detection, dominant color</li>
-<li>Pygame <code>draw_layer()</code> with two-level surface cache (tile + scaled)</li>
-<li>Viewport culling — only draws tiles inside the screen</li>
+<li>External <code>.tsx</code> tilesets and inline definitions</li>
+<li>Tile flip and rotation flags (<code>flip_h</code>, <code>flip_v</code>, <code>flip_d</code>)</li>
+<li>Per-tile class, properties, collision objects, and animations</li>
+<li><code>TileData.get_surface(scale)</code> — static tile surface with scale cache</li>
+<li><code>TileData.get_animated_surface(elapsed_ms, scale)</code> — animated tile playback</li>
+<li><code>render.draw_all_layers()</code> with viewport culling and two-level global cache</li>
+<li>Pillow helpers: <code>is_empty_tile()</code>, <code>get_dominant_color()</code></li>
 </ul>
 <hr />
 <h2 id="quick-install">Quick install<a class="headerlink" href="#quick-install" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span><span class="w">   </span><span class="c1"># with docs extras</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span><span class="w">   </span><span class="c1"># with MkDocs extras</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="w">           </span><span class="c1"># runtime only</span>
 </span></code></pre></div>
 <hr />
 <h2 id="minimal-usage">Minimal usage<a class="headerlink" href="#minimal-usage" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pygame</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">TiledMap</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">pygame</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">screen</span> <span class="o">=</span> <span class="n">pygame</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">set_mode</span><span class="p">((</span><span class="mi">800</span><span class="p">,</span> <span class="mi">600</span><span class="p">))</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">clock</span>  <span class="o">=</span> <span class="n">pygame</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">Clock</span><span class="p">()</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">tmap</span> <span class="o">=</span> <span class="n">TiledMap</span><span class="p">(</span><span class="s2">&quot;map.tmx&quot;</span><span class="p">)</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">cam_x</span><span class="p">,</span> <span class="n">cam_y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">while</span> <span class="n">running</span><span class="p">:</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">pygame</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">pygame</span><span class="o">.</span><span class="n">QUIT</span><span class="p">:</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>            <span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="n">screen</span><span class="o">.</span><span class="n">fill</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="n">tmap</span><span class="o">.</span><span class="n">draw_all_layers</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="n">cam_x</span><span class="p">,</span> <span class="n">cam_y</span><span class="p">))</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    <span class="n">pygame</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">flip</span><span class="p">()</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">clock</span><span class="o">.</span><span class="n">tick</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Parser</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">tiledpy.map.render</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">render</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">pygame</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">screen</span> <span class="o">=</span> <span class="n">pygame</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">set_mode</span><span class="p">((</span><span class="mi">800</span><span class="p">,</span> <span class="mi">600</span><span class="p">))</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">clock</span>  <span class="o">=</span> <span class="n">pygame</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">Clock</span><span class="p">()</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">tmap</span>   <span class="o">=</span> <span class="n">Parser</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;map.tmx&quot;</span><span class="p">)</span>    <span class="c1"># .tmx (XML) or .tmj / .json (JSON)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="n">cam_x</span><span class="p">,</span> <span class="n">cam_y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">running</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">while</span> <span class="n">running</span><span class="p">:</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">pygame</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">pygame</span><span class="o">.</span><span class="n">QUIT</span><span class="p">:</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>            <span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="n">screen</span><span class="o">.</span><span class="n">fill</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    <span class="n">render</span><span class="o">.</span><span class="n">draw_all_layers</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="n">tmap</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="n">cam_x</span><span class="p">,</span> <span class="n">cam_y</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">pygame</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">flip</span><span class="p">()</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>    <span class="n">clock</span><span class="o">.</span><span class="n">tick</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
-<h2 id="high-level-loading-flow">High-level loading flow<a class="headerlink" href="#high-level-loading-flow" title="Permanent link">&para;</a></h2>
+<h2 id="loading-flow">Loading flow<a class="headerlink" href="#loading-flow" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart TD
-    A([TiledMap.__init__]) --&gt; B[Parse &amp;lt;map&amp;gt; attributes]
-    B --&gt; C{Has tilesets?}
-    C -- inline --&gt; D[Parse inline tileset]
-    C -- .tsx source --&gt; E[Parse external TSX file]
-    D --&gt; F[Open spritesheet\nwith Pillow]
-    E --&gt; F
-    F --&gt; G[Tileset ready\nfirstgid · columns · tilecount]
-    G --&gt; H{More layers?}
-    H -- tilelayer --&gt; I[Decode data\nCSV / Base64]
-    I --&gt; J{Infinite map?}
-    J -- yes --&gt; K[load_from_chunks]
-    J -- no --&gt; L[load_from_flat]
-    K --&gt; M[TileLayer ready]
-    L --&gt; M
-    H -- objectgroup --&gt; N[Parse TileObject list]
-    N --&gt; O[ObjectLayer ready]
-    M --&gt; P{More layers?}
+    A([Parser.load]) --&gt; B{XML or JSON?}
+    B -- .tmx --&gt; C[xml.etree.parse]
+    B -- .tmj/.json --&gt; D[json.load]
+    C --&gt; E[Parse map attributes]
+    D --&gt; E
+    E --&gt; F{Has tilesets?}
+    F -- .tsx source --&gt; G[Parse external TSX]
+    F -- inline --&gt; H[Parse inline tileset]
+    G --&gt; I[Pillow Image.open spritesheet]
+    H --&gt; I
+    I --&gt; J[Tileset ready\nfirstgid · columns · tilecount]
+    J --&gt; K{More layers?}
+    K -- tilelayer --&gt; L[Decode CSV / Base64]
+    L --&gt; M{Infinite map?}
+    M -- yes --&gt; N[load_from_chunks]
+    M -- no --&gt; O[load_from_flat]
+    N --&gt; P[TileLayer ready]
     O --&gt; P
-    P -- yes --&gt; H
-    P -- no --&gt; Q([TiledMap ready])</code></pre>
+    K -- objectgroup --&gt; Q[Parse TileObject list]
+    Q --&gt; R[ObjectLayer ready]
+    P --&gt; S{More layers?}
+    R --&gt; S
+    S -- yes --&gt; K
+    S -- no --&gt; T([TileMap ready])</code></pre>
 <hr />
 <h2 id="package-structure">Package structure<a class="headerlink" href="#package-structure" title="Permanent link">&para;</a></h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>tiledpy/
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── __init__.py      Public API exports
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── loader.py        TiledMap — parser + draw_layer()
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>├── tileset.py       Tileset — Pillow crop + pygame surface cache
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>├── layer.py         TileLayer · ObjectLayer · TileObject
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>└── renderer.py      draw_layer() with two-level global cache
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── __init__.py               Public API exports
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── map/
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>│   ├── map.py                TileMap (data model) + OFFSET enum
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│   ├── parser.py             Parser.load(path) → TileMap
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>│   └── render.py             draw_layer / draw_all_layers / clear_cache
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>└── layer/
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    ├── tileset.py            Tileset, TileMeta, TileFlags, decode_gid
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    ├── tile.py               TileData (positioned tile), TileLayer
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    └── object.py             TileObject, ObjectLayer
 </span></code></pre></div>
 
 

@@ -498,6 +498,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#package-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#class-diagram" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -509,21 +520,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#renderer-module" class="md-nav__link">
+  <a href="#gid-decoding" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Renderer module
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tmx-data-decoding-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        TMX data decoding flow
+        GID decoding
       
     </span>
   </a>
@@ -864,128 +864,82 @@
 
 
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
+<h2 id="package-overview">Package overview<a class="headerlink" href="#package-overview" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>tiledpy/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── __init__.py               Public API — re-exports everything below
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── map/
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   ├── map.py                TileMap (pure data model) + OFFSET enum
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   ├── parser.py             Parser — file → TileMap (XML and JSON)
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   └── render.py             Pygame rendering + global surface caches
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>└── layer/
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    ├── tileset.py            Tileset, TileMeta, TileFlags, decode_gid
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ├── tile.py               TileData (positioned tile), TileLayer
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    └── object.py             TileObject, ObjectLayer
+</span></code></pre></div>
+<p>Each module has a single responsibility:</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>map/parser.py</code></td>
+<td>Parse <code>.tmx</code> / <code>.tmj</code> files into data structures</td>
+</tr>
+<tr>
+<td><code>map/map.py</code></td>
+<td>Data model: dimensions, layers, tilesets, coordinate helpers</td>
+</tr>
+<tr>
+<td><code>map/render.py</code></td>
+<td>Pygame rendering with viewport culling and surface caches</td>
+</tr>
+<tr>
+<td><code>layer/tileset.py</code></td>
+<td>Spritesheet cropping (Pillow) + pygame surface cache</td>
+</tr>
+<tr>
+<td><code>layer/tile.py</code></td>
+<td>Positioned tile with <code>get_surface()</code> / <code>get_animated_surface()</code></td>
+</tr>
+<tr>
+<td><code>layer/object.py</code></td>
+<td>Tiled objects (spawn points, triggers, hitboxes)</td>
+</tr>
+</tbody>
+</table>
+<hr />
 <h2 id="class-diagram">Class diagram<a class="headerlink" href="#class-diagram" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>classDiagram
-    class TiledMap {
-        +str path
-        +str base_dir
-        +str orientation
-        +str render_order
+    class Parser {
+        &lt;&lt;static&gt;&gt;
+        +load(path) TileMap
+        -_parse_xml(path) TileMap
+        -_parse_json(path) TileMap
+        -_parse_tsx(firstgid, path) Tileset
+        -_parse_tile_layer(data) TileLayer
+        -_parse_object_layer(data) ObjectLayer
+    }
+
+    class TileMap {
         +int width
         +int height
         +int tile_width
         +int tile_height
+        +str orientation
         +bool infinite
         +str background_color
-        +list~Tileset~ tilesets
-        +list~LayerType~ layers
         +dict properties
-        +visible_layers list~TileLayer~
+        +list~Tileset~ tilesets
+        +list layers
         +get_layer(name) LayerType
         +get_tile_layers() list~TileLayer~
         +get_object_layers() list~ObjectLayer~
-        +get_tileset_for_gid(gid) Tileset
-        +get_tile_gid(tx, ty, layer_name) int
         +world_to_tile(x, y, scale, offset) tuple
         +tile_to_world(tx, ty, scale, offset) tuple
-        +draw_layer(surface, name, offset, scale)
-        +draw_all_layers(surface, offset, scale)
-        -_parse(path)
-        -_parse_tileset_ref(elem) Tileset
-        -_parse_tsx(firstgid, path) Tileset
-        -_parse_tile_layer(elem) TileLayer
-        -_parse_object_layer(elem) ObjectLayer
-    }
-
-    class Tileset {
-        +str name
-        +int firstgid
-        +int tile_width
-        +int tile_height
-        +int columns
-        +int tilecount
-        +int spacing
-        +int margin
-        +dict~int,TileData~ tile_data
-        -Image _sheet
-        -dict _pil_cache
-        -dict _pygame_cache
-        +get_tile_image(local_id) Image
-        +get_pygame_surface(local_id, flags) Surface
-        +is_empty_tile(local_id) bool
-        +get_dominant_color(local_id) tuple
-        +contains_gid(gid) bool
-        +global_to_local(gid) int
-        +clear_pygame_cache()
-        -_crop_tile(local_id) Image
-        -_build_surface(local_id, flags) Surface
-    }
-
-    class TileData {
-        +int local_id
-        +str tile_class
-        +dict properties
-        +list collision_objects
-        +list animation
-        +int width
-        +int height
-    }
-
-    class TileFlags {
-        +bool flip_h
-        +bool flip_v
-        +bool flip_d
-    }
-
-    class TileLayer {
-        +int id
-        +str name
-        +bool visible
-        +float opacity
-        +float offset_x
-        +float offset_y
-        +dict properties
-        +int min_x
-        +int min_y
-        +int max_x
-        +int max_y
-        +int width
-        +int height
-        -dict _data
-        -list~Tileset~ _tilesets
-        +load_from_flat(data, width, height)
-        +load_from_chunks(chunks)
-        +get_raw_gid(tx, ty) int
-        +get_tile(tx, ty) TileData
-        +get_tileset_by_gid(gid) Tileset
-        +iter_tiles() Iterator
-        +get_tile_by_property(prop, value) list
-    }
-
-    class ObjectLayer {
-        +int id
-        +str name
-        +bool visible
-        +float opacity
-        +str color
-        +list~TileObject~ objects
-        +dict properties
-        +get_object(name) TileObject
-        +get_objects_by_type(type) list
-    }
-
-    class TileObject {
-        +int id
-        +str name
-        +str type
-        +float x
-        +float y
-        +float width
-        +float height
-        +float rotation
-        +bool visible
-        +dict properties
-        +int gid
     }
 
     class OFFSET {
@@ -1001,50 +955,144 @@
         RIGHT_BOTTOM
     }
 
-    TiledMap "1" --&gt; "0..*" Tileset : tilesets
-    TiledMap "1" --&gt; "0..*" TileLayer : layers
-    TiledMap "1" --&gt; "0..*" ObjectLayer : layers
-    TiledMap ..&gt; TileLayer : injects _tilesets after parse
-    TiledMap ..&gt; OFFSET : world_to_tile / tile_to_world
-    TileLayer "0..*" --&gt; "0..*" Tileset : _tilesets
-    Tileset "1" --&gt; "0..*" TileData : tile_data
-    TileData ..&gt; TileFlags : decoded via decode_gid()
-    ObjectLayer "1" --&gt; "0..*" TileObject : objects</code></pre>
-<hr />
-<h2 id="renderer-module">Renderer module<a class="headerlink" href="#renderer-module" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>classDiagram
-    class renderer {
+    class render {
         &lt;&lt;module&gt;&gt;
         -dict _surface_cache
         -dict _scaled_cache
-        +get_cached_surface(gid, tilesets) Surface
-        +draw_layer(surface, layer, tilesets, tile_width, tile_height, offset, scale)
-        +clear_surface_cache()
+        +draw_layer(surface, layer, tw, th, offset, scale)
+        +draw_all_layers(surface, tilemap, offset, scale)
+        +clear_cache()
         +cache_stats() dict
-        -_find_tileset(gid, tilesets) Tileset
-        -_get_scaled_surface(surf, w, h) Surface
     }
 
-    class tileset_module {
-        &lt;&lt;module&gt;&gt;
-        +GID_FLIP_H : int
-        +GID_FLIP_V : int
-        +GID_FLIP_D : int
-        +GID_MASK : int
-        +decode_gid(raw_gid) tuple~int,TileFlags~
+    class Tileset {
+        +str name
+        +int firstgid
+        +int tile_width
+        +int tile_height
+        +int columns
+        +int tilecount
+        +int spacing
+        +int margin
+        +dict~int,TileMeta~ tile_data
+        -Image _sheet
+        -dict _pil_cache
+        -dict _pygame_cache
+        +get_tile_image(local_id) Image
+        +get_pygame_surface(local_id, flags) Surface
+        +is_empty_tile(local_id) bool
+        +get_dominant_color(local_id) tuple
+        +contains_gid(gid) bool
+        +global_to_local(gid) int
+        +clear_pygame_cache()
     }
 
-    renderer ..&gt; tileset_module : uses decode_gid()
-    renderer ..&gt; Tileset : calls get_pygame_surface()</code></pre>
+    class TileMeta {
+        +int local_id
+        +str tile_class
+        +dict properties
+        +list collision_objects
+        +list animation
+        +int width
+        +int height
+    }
+
+    class TileFlags {
+        +bool flip_h
+        +bool flip_v
+        +bool flip_d
+    }
+
+    class TileData {
+        +int tx
+        +int ty
+        +int local_id
+        +Tileset tileset
+        +bool flip_h
+        +bool flip_v
+        +bool flip_d
+        +meta TileMeta
+        +is_animated bool
+        +tile_class str
+        +properties dict
+        +collision_objects list
+        +width(scale) int
+        +height(scale) int
+        +get_surface(scale) Surface
+        +get_animated_surface(elapsed_ms, scale) Surface
+    }
+
+    class TileLayer {
+        +int id
+        +str name
+        +bool visible
+        +float opacity
+        +float offset_x
+        +float offset_y
+        +dict properties
+        -dict _data
+        +load_from_flat(data, w, h)
+        +load_from_chunks(chunks)
+        +get_raw_gid(tx, ty) int
+        +get_tile(tx, ty) TileData
+        +iter_tiles() Iterator~TileData~
+        +get_tiles_by_class(cls) list
+        +get_tiles_by_property(prop, value) list
+        +get_animated_tiles() list
+    }
+
+    class ObjectLayer {
+        +int id
+        +str name
+        +bool visible
+        +float opacity
+        +str color
+        +list~TileObject~ objects
+        +dict properties
+        +get_object(name) TileObject
+        +get_objects_by_class(cls) list
+    }
+
+    class TileObject {
+        +int id
+        +str name
+        +str object_class
+        +float x
+        +float y
+        +float rotation
+        +bool visible
+        +dict properties
+        +int gid
+        +width(scale) float
+        +height(scale) float
+    }
+
+    Parser ..&gt; TileMap : creates
+    Parser ..&gt; Tileset : creates
+    Parser ..&gt; TileLayer : creates
+    Parser ..&gt; ObjectLayer : creates
+    TileMap "1" --&gt; "0..*" Tileset : tilesets
+    TileMap "1" --&gt; "0..*" TileLayer : layers
+    TileMap "1" --&gt; "0..*" ObjectLayer : layers
+    TileMap ..&gt; OFFSET : world_to_tile / tile_to_world
+    render ..&gt; TileLayer : reads _data
+    render ..&gt; Tileset : get_pygame_surface
+    TileLayer "0..*" --&gt; "0..*" Tileset : _tilesets
+    TileLayer ..&gt; TileData : iter_tiles / get_tile
+    Tileset "1" --&gt; "0..*" TileMeta : tile_data
+    TileData --&gt; Tileset : tileset
+    TileData ..&gt; TileMeta : meta (delegated)
+    TileData ..&gt; TileFlags : _flags()
+    ObjectLayer "1" --&gt; "0..*" TileObject : objects</code></pre>
 <hr />
-<h2 id="tmx-data-decoding-flow">TMX data decoding flow<a class="headerlink" href="#tmx-data-decoding-flow" title="Permanent link">&para;</a></h2>
+<h2 id="gid-decoding">GID decoding<a class="headerlink" href="#gid-decoding" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart LR
-    A[raw GID\n0x80000000 bits] --&gt; B[decode_gid]
-    B --&gt; C[real_gid\nGID_MASK applied]
+    A[raw GID\n32-bit int] --&gt; B[decode_gid]
+    B --&gt; C[real_gid\nbits 0–28]
     B --&gt; D[TileFlags\nflip_h · flip_v · flip_d]
 
     C --&gt; E{Cache hit?}
-    E -- yes --&gt; F[pygame.Surface\nfrom cache]
+    E -- yes --&gt; F[pygame.Surface]
     E -- no --&gt; G[_find_tileset\nbinary search]
     G --&gt; H[global_to_local\ngid - firstgid]
     H --&gt; I[Tileset._crop_tile\nPillow crop]
@@ -1057,10 +1105,15 @@
     N --&gt; F</code></pre>
 <hr />
 <h2 id="cache-architecture">Cache architecture<a class="headerlink" href="#cache-architecture" title="Permanent link">&para;</a></h2>
+<p>Four cache levels from slowest (miss) to fastest (hit):</p>
 <pre class="mermaid"><code>flowchart TD
-    subgraph "renderer.py — global caches"
+    subgraph "render.py — global, shared across all layers"
         SC["_surface_cache\n(firstgid, local_id, fh, fv, fd)\n→ pygame.Surface"]
-        KC["_scaled_cache\n(id surf, w, h)\n→ pygame.Surface"]
+        KC["_scaled_cache\n(id surf, scale)\n→ pygame.Surface (scaled)"]
+    end
+
+    subgraph "tile.py — module-level, used by TileData"
+        DC["_scaled_cache\n(id surf, scale)\n→ pygame.Surface (scaled)"]
     end
 
     subgraph "Tileset._pygame_cache — per instance"
@@ -1071,13 +1124,46 @@
         PC["local_id\n→ PIL.Image"]
     end
 
-    R[draw_layer call] --&gt; SC
+    R1[render.draw_layer] --&gt; SC
     SC -- miss --&gt; TC
     TC -- miss --&gt; PC
     PC -- miss --&gt; CROP[Pillow crop\nfrom spritesheet]
     CROP --&gt; PC
+    SC -- scale != 1 --&gt; KC
 
-    SC -- scale != 1 --&gt; KC</code></pre>
+    R2[TileData.get_surface\nor get_animated_surface] --&gt; TC
+    TC -- miss --&gt; PC
+    R2 -- scale != 1 --&gt; DC</code></pre>
+<table>
+<thead>
+<tr>
+<th>Cache</th>
+<th>Cleared by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>render._surface_cache</code></td>
+<td><code>render.clear_cache()</code></td>
+</tr>
+<tr>
+<td><code>render._scaled_cache</code></td>
+<td><code>render.clear_cache()</code></td>
+</tr>
+<tr>
+<td><code>tile._scaled_cache</code></td>
+<td><code>clear_tile_cache()</code></td>
+</tr>
+<tr>
+<td><code>Tileset._pil_cache</code></td>
+<td>persists for life of the Tileset</td>
+</tr>
+<tr>
+<td><code>Tileset._pygame_cache</code></td>
+<td><code>tileset.clear_pygame_cache()</code></td>
+</tr>
+</tbody>
+</table>
 
 
 

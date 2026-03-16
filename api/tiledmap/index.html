@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tiledmap" class="md-skip">
+        <a href="#tilemap-parser" class="md-skip">
           Skip to content
         </a>
       
@@ -613,22 +613,33 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap" class="md-nav__link">
+  <a href="#parser" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TiledMap
+        Parser
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="TiledMap">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tilemap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TileMap
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TileMap">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.get_layer" class="md-nav__link">
+  <a href="#attributes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_layer
+        Attributes
       
     </span>
   </a>
@@ -636,10 +647,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.get_tile_layers" class="md-nav__link">
+  <a href="#layer-access" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_tile_layers
+        Layer access
       
     </span>
   </a>
@@ -647,10 +658,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.get_object_layers" class="md-nav__link">
+  <a href="#coordinate-helpers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_object_layers
+        Coordinate helpers
       
     </span>
   </a>
@@ -658,65 +669,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.world_to_tile" class="md-nav__link">
+  <a href="#offset-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        world_to_tile
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.tile_to_world" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        tile_to_world
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.get_tile_gid" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        get_tile_gid
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.get_tileset_for_gid" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        get_tileset_for_gid
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.draw_layer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        draw_layer
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tiledpy.loader.TiledMap.draw_all_layers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        draw_all_layers
+        OFFSET enum
       
     </span>
   </a>
@@ -729,10 +685,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#supported-tmx-features" class="md-nav__link">
+  <a href="#supported-features" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Supported TMX features
+        Supported features
       
     </span>
   </a>
@@ -946,1054 +902,132 @@
   
 
 
-<h1 id="tiledmap">TiledMap<a class="headerlink" href="#tiledmap" title="Permanent link">&para;</a></h1>
-<p><code>tiledpy.TiledMap</code> is the main entry point. It parses a <code>.tmx</code> file and
-exposes layers, tilesets, and rendering methods.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">TiledMap</span>
+<h1 id="tilemap-parser">TileMap &amp; Parser<a class="headerlink" href="#tilemap-parser" title="Permanent link">&para;</a></h1>
+<p><code>Parser</code> loads a map file and returns a <code>TileMap</code>.
+<code>TileMap</code> is a pure data model — it does not parse or render.</p>
+<hr />
+<h2 id="parser">Parser<a class="headerlink" href="#parser" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Parser</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">tmap</span> <span class="o">=</span> <span class="n">TiledMap</span><span class="p">(</span><span class="s2">&quot;map.tmx&quot;</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">tmap</span> <span class="o">=</span> <span class="n">Parser</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;map.tmx&quot;</span><span class="p">)</span>   <span class="c1"># XML</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">tmap</span> <span class="o">=</span> <span class="n">Parser</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;map.tmj&quot;</span><span class="p">)</span>   <span class="c1"># JSON</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">tmap</span> <span class="o">=</span> <span class="n">Parser</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;map.json&quot;</span><span class="p">)</span>  <span class="c1"># JSON (alternative extension)</span>
+</span></code></pre></div>
+<p><code>Parser.load(path)</code> auto-detects the format from the file extension:</p>
+<table>
+<thead>
+<tr>
+<th>Extension</th>
+<th>Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.tmx</code></td>
+<td>XML (classic Tiled format)</td>
+</tr>
+<tr>
+<td><code>.tmj</code>, <code>.json</code></td>
+<td>JSON (modern Tiled format)</td>
+</tr>
+</tbody>
+</table>
+<p>Returns a fully constructed <code>TileMap</code> with all tilesets and layers populated.</p>
+<hr />
+<h2 id="tilemap">TileMap<a class="headerlink" href="#tilemap" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileMap</span>
+</span></code></pre></div>
+<h3 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>width</code></td>
+<td><code>int</code></td>
+<td>Map width in tiles</td>
+</tr>
+<tr>
+<td><code>height</code></td>
+<td><code>int</code></td>
+<td>Map height in tiles</td>
+</tr>
+<tr>
+<td><code>tile_width</code></td>
+<td><code>int</code></td>
+<td>Tile width in pixels</td>
+</tr>
+<tr>
+<td><code>tile_height</code></td>
+<td><code>int</code></td>
+<td>Tile height in pixels</td>
+</tr>
+<tr>
+<td><code>orientation</code></td>
+<td><code>str</code></td>
+<td>Map orientation (e.g. <code>"orthogonal"</code>)</td>
+</tr>
+<tr>
+<td><code>infinite</code></td>
+<td><code>bool</code></td>
+<td>True if the map uses chunk-based infinite scrolling</td>
+</tr>
+<tr>
+<td><code>background_color</code></td>
+<td><code>str \| None</code></td>
+<td>Hex color <code>"#rrggbb"</code> or None</td>
+</tr>
+<tr>
+<td><code>properties</code></td>
+<td><code>dict</code></td>
+<td>Custom map-level properties</td>
+</tr>
+<tr>
+<td><code>tilesets</code></td>
+<td><code>list[Tileset]</code></td>
+<td>All tilesets sorted by <code>firstgid</code></td>
+</tr>
+<tr>
+<td><code>layers</code></td>
+<td><code>list[TileLayer \| ObjectLayer]</code></td>
+<td>All layers in draw order</td>
+</tr>
+</tbody>
+</table>
+<h3 id="layer-access">Layer access<a class="headerlink" href="#layer-access" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># First layer matching the name</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">layer</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s2">&quot;ground&quot;</span><span class="p">)</span>          <span class="c1"># → TileLayer | ObjectLayer | None</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># All tile layers in draw order</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">tile_layers</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">get_tile_layers</span><span class="p">()</span>      <span class="c1"># → list[TileLayer]</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># All object layers in draw order</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">object_layers</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">get_object_layers</span><span class="p">()</span>  <span class="c1"># → list[ObjectLayer]</span>
+</span></code></pre></div>
+<h3 id="coordinate-helpers">Coordinate helpers<a class="headerlink" href="#coordinate-helpers" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">OFFSET</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># World pixel → tile (floor division)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">world_to_tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">world_to_tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">OFFSET</span><span class="o">.</span><span class="n">CENTER</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Tile → world pixel</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">wx</span><span class="p">,</span> <span class="n">wy</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">tile_to_world</span><span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">wx</span><span class="p">,</span> <span class="n">wy</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">tile_to_world</span><span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">OFFSET</span><span class="o">.</span><span class="n">CENTER</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="offset-enum">OFFSET enum<a class="headerlink" href="#offset-enum" title="Permanent link">&para;</a></h3>
+<p>Nine anchor points for <code>world_to_tile</code> / <code>tile_to_world</code>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>LEFT_TOP    MIDDLE_TOP    RIGHT_TOP
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>LEFT_MIDDLE   CENTER    RIGHT_MIDDLE
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>LEFT_BOTTOM MIDDLE_BOTTOM RIGHT_BOTTOM
 </span></code></pre></div>
 <hr />
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="tiledpy.loader.TiledMap" class="doc doc-heading">
-            <code>tiledpy.loader.TiledMap</code>
-
-
-<a href="#tiledpy.loader.TiledMap" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents first">
-
-
-
-        <p>A Tiled map loaded from a <code>.tmx</code> file.</p>
-<p>Parses the TMX XML, builds :class:<code>~tiledpy.tileset.Tileset</code>,
-:class:<code>~tiledpy.layer.TileLayer</code>, and
-:class:<code>~tiledpy.layer.ObjectLayer</code> objects, and exposes rendering
-helpers for Pygame.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>path</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Absolute or relative path to the <code>.tmx</code> file.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Attributes:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.path">path</span></code></td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Absolute path to the <code>.tmx</code> file.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.base_dir">base_dir</span></code></td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Directory containing the <code>.tmx</code> (used to resolve relative
-paths to images and external tilesets).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.orientation">orientation</span></code></td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Map orientation: <code>"orthogonal"</code>, <code>"isometric"</code>, etc.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.render_order">render_order</span></code></td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile render order, e.g. <code>"right-down"</code> (default).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.width">width</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Map width in tiles.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.height">height</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Map height in tiles.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.tile_width">tile_width</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile width in pixels.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.tile_height">tile_height</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile height in pixels.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.infinite">infinite</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p><code>True</code> if the map uses chunk-based infinite scrolling.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.background_color">background_color</span></code></td>
-            <td>
-                  <code><span title="str">str</span> or None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Hex background color string <code>"#rrggbb"</code>, or <code>None</code>.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.tilesets">tilesets</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="tiledpy.tileset.Tileset" href="../tileset/#tiledpy.tileset.Tileset">Tileset</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>All tilesets sorted by <code>firstgid</code> ascending.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.layers">layers</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="tiledpy.layer.TileLayer" href="../layer/#tiledpy.layer.TileLayer">TileLayer</a> or <a class="autorefs autorefs-internal" title="tiledpy.layer.ObjectLayer
-
-
-  
-      dataclass
-  " href="../layer/#tiledpy.layer.ObjectLayer">ObjectLayer</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>All layers in draw order.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.loader.TiledMap.properties">properties</span></code></td>
-            <td>
-                  <code><span title="dict">dict</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Custom map-level properties.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Raises:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="FileNotFoundError">FileNotFoundError</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>If any tileset image referenced by the TMX/TSX is missing.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">tmap</span> <span class="o">=</span> <span class="n">TiledMap</span><span class="p">(</span><span class="s2">&quot;map.tmx&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">tmap</span><span class="o">.</span><span class="n">draw_layer</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="s2">&quot;ground&quot;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="n">cam_x</span><span class="p">,</span> <span class="n">cam_y</span><span class="p">))</span>
-</span></code></pre></div>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.get_layer" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_layer</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></code>
-
-<a href="#tiledpy.loader.TiledMap.get_layer" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return the first layer whose name matches.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>name</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Layer name to look up.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="tiledpy.layer.TileLayer" href="../layer/#tiledpy.layer.TileLayer">TileLayer</a> or <a class="autorefs autorefs-internal" title="tiledpy.layer.ObjectLayer
-
-
-  
-      dataclass
-  " href="../layer/#tiledpy.layer.ObjectLayer">ObjectLayer</a> or None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The matching layer, or <code>None</code> if not found.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.get_tile_layers" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_tile_layers</span><span class="p">()</span></code>
-
-<a href="#tiledpy.loader.TiledMap.get_tile_layers" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return all TileLayer instances in draw order.</p>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="tiledpy.layer.TileLayer" href="../layer/#tiledpy.layer.TileLayer">TileLayer</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>All tile layers from the map.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.get_object_layers" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_object_layers</span><span class="p">()</span></code>
-
-<a href="#tiledpy.loader.TiledMap.get_object_layers" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return all ObjectLayer instances in draw order.</p>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="tiledpy.layer.ObjectLayer
-
-
-  
-      dataclass
-  " href="../layer/#tiledpy.layer.ObjectLayer">ObjectLayer</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>All object layers from the map.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.world_to_tile" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">world_to_tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">OFFSET</span><span class="o">.</span><span class="n">LEFT_TOP</span><span class="p">)</span></code>
-
-<a href="#tiledpy.loader.TiledMap.world_to_tile" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Convert world pixel coordinates to tile coordinates.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>x</code>
-            </td>
-            <td>
-                  <code><span title="float">float</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>World X position in pixels.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>y</code>
-            </td>
-            <td>
-                  <code><span title="float">float</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>World Y position in pixels.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>scale</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Integer scale factor applied during rendering, by default <code>1</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>1</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="tuple">tuple</span>[<span title="int">int</span>, <span title="int">int</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p><code>(tx, ty)</code> tile coordinates (integer, floor division).</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">world_to_tile</span><span class="p">(</span><span class="n">mouse_x</span> <span class="o">+</span> <span class="n">cam_x</span><span class="p">,</span> <span class="n">mouse_y</span> <span class="o">+</span> <span class="n">cam_y</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</span></code></pre></div>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.tile_to_world" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">tile_to_world</span><span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">OFFSET</span><span class="o">.</span><span class="n">LEFT_TOP</span><span class="p">)</span></code>
-
-<a href="#tiledpy.loader.TiledMap.tile_to_world" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Convert tile coordinates to world pixel coordinates.</p>
-<p>Returns the top-left pixel of the tile.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>tx</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile X coordinate.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>ty</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile Y coordinate.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>scale</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Integer scale factor applied during rendering, by default <code>1</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>1</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="tuple">tuple</span>[<span title="int">int</span>, <span title="int">int</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p><code>(x, y)</code> world position in pixels (top-left corner of the tile).</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">tile_to_world</span><span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">screen</span><span class="o">.</span><span class="n">blit</span><span class="p">(</span><span class="n">marker</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">cam_x</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">cam_y</span><span class="p">))</span>
-</span></code></pre></div>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.get_tile_gid" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_tile_gid</span><span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">layer_name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-<a href="#tiledpy.loader.TiledMap.get_tile_gid" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return the raw GID at tile coordinates <code>(tx, ty)</code>.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>tx</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile X coordinate.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>ty</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile Y coordinate.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>layer_name</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span> or None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Name of the layer to query. If <code>None</code>, all
-:class:<code>~tiledpy.layer.TileLayer</code> instances are searched in
-draw order and the first non-zero GID is returned.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Raw GID (may include flip/rotate flags). Returns <code>0</code> if
-the tile is empty or the layer does not exist.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">gid</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">get_tile_gid</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;ground&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">gid</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">get_tile_gid</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>          <span class="c1"># first non-empty layer</span>
-</span></code></pre></div>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.get_tileset_for_gid" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_tileset_for_gid</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span></code>
-
-<a href="#tiledpy.loader.TiledMap.get_tileset_for_gid" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return the Tileset that owns the given global tile ID.</p>
-<p>Uses a linear scan (tilesets are sorted by <code>firstgid</code>),
-returning the last tileset whose <code>firstgid</code> is less than or
-equal to <code>gid</code>.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>gid</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Global tile ID (without flip flags).</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="tiledpy.tileset.Tileset" href="../tileset/#tiledpy.tileset.Tileset">Tileset</a> or None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The owning tileset, or <code>None</code> if no tileset covers this
-GID.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">ts</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">get_tileset_for_gid</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">local</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">global_to_local</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
-</span></code></pre></div>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.draw_layer" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">draw_layer</span><span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="n">layer_name</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
-
-<a href="#tiledpy.loader.TiledMap.draw_layer" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Render one named TileLayer onto a <code>pygame.Surface</code>.</p>
-<p>Delegates to :func:<code>tiledpy.renderer.draw_layer</code>. Tiles outside
-the surface bounds are skipped (viewport culling). Does nothing
-if the layer does not exist or is not a :class:<code>TileLayer</code>.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>surface</code>
-            </td>
-            <td>
-                  <code><span title="pygame.Surface">Surface</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Render target.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>layer_name</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Name of the layer to draw.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>offset</code>
-            </td>
-            <td>
-                  <code><span title="tuple">tuple</span>[<span title="int">int</span>, <span title="int">int</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Camera offset <code>(ox, oy)</code> in pixels, by default <code>(0, 0)</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>(0, 0)</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>scale</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Integer scale factor for pixel-art rendering, by default <code>1</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>1</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">tmap</span><span class="o">.</span><span class="n">draw_layer</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="s2">&quot;water&quot;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="n">cam_x</span><span class="p">,</span> <span class="n">cam_y</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</span></code></pre></div>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.loader.TiledMap.draw_all_layers" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">draw_all_layers</span><span class="p">(</span><span class="n">surface</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
-
-<a href="#tiledpy.loader.TiledMap.draw_all_layers" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Draw all visible TileLayer instances in order.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>surface</code>
-            </td>
-            <td>
-                  <code><span title="pygame.Surface">Surface</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Render target.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>offset</code>
-            </td>
-            <td>
-                  <code><span title="tuple">tuple</span>[<span title="int">int</span>, <span title="int">int</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Camera offset <code>(ox, oy)</code> in pixels, by default <code>(0, 0)</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>(0, 0)</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>scale</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Integer scale factor for pixel-art rendering, by default <code>1</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>1</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
-
-</div><hr />
-<h2 id="supported-tmx-features">Supported TMX features<a class="headerlink" href="#supported-tmx-features" title="Permanent link">&para;</a></h2>
+<h2 id="supported-features">Supported features<a class="headerlink" href="#supported-features" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2008,6 +1042,14 @@ if the layer does not exist or is not a :class:<code>TileLayer</code>.</p>
 </tr>
 <tr>
 <td>Infinite maps (chunks)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>.tmx</code> XML format</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>.tmj</code> / <code>.json</code> format</td>
 <td>Yes</td>
 </tr>
 <tr>
@@ -2035,6 +1077,10 @@ if the layer does not exist or is not a :class:<code>TileLayer</code>.</p>
 <td>Yes</td>
 </tr>
 <tr>
+<td>Tile class</td>
+<td>Yes</td>
+</tr>
+<tr>
 <td>Tile properties</td>
 <td>Yes</td>
 </tr>
@@ -2044,7 +1090,7 @@ if the layer does not exist or is not a :class:<code>TileLayer</code>.</p>
 </tr>
 <tr>
 <td>Tile animations</td>
-<td>Yes (data stored, no auto-play)</td>
+<td>Yes (auto-played via <code>get_animated_surface()</code>)</td>
 </tr>
 <tr>
 <td>Object layers</td>

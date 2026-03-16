@@ -649,25 +649,14 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tiledpy.tileset.Tileset" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tileset
-      
-    </span>
-  </a>
-  
     <nav class="md-nav" aria-label="Tileset">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tiledpy.tileset.Tileset.get_tile_image" class="md-nav__link">
+  <a href="#attributes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_tile_image
+        Attributes
       
     </span>
   </a>
@@ -675,10 +664,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledpy.tileset.Tileset.is_empty_tile" class="md-nav__link">
+  <a href="#pygame-surface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        is_empty_tile
+        Pygame surface
       
     </span>
   </a>
@@ -686,10 +675,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledpy.tileset.Tileset.get_dominant_color" class="md-nav__link">
+  <a href="#pil-helpers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_dominant_color
+        PIL helpers
       
     </span>
   </a>
@@ -697,10 +686,38 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledpy.tileset.Tileset.get_pygame_surface" class="md-nav__link">
+  <a href="#gid-utilities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        get_pygame_surface
+        GID utilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tilemeta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TileMeta
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TileMeta">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#attributes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attributes
       
     </span>
   </a>
@@ -708,32 +725,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tiledpy.tileset.Tileset.clear_pygame_cache" class="md-nav__link">
+  <a href="#example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        clear_pygame_cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tiledpy.tileset.Tileset.contains_gid" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        contains_gid
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tiledpy.tileset.Tileset.global_to_local" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        global_to_local
+        Example
       
     </span>
   </a>
@@ -757,17 +752,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tiledpy.tileset.TileFlags" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        TileFlags
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#decode_gid" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -776,38 +760,22 @@
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tiledpy.tileset.decode_gid" class="md-nav__link">
+    <nav class="md-nav" aria-label="decode_gid">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gid-encoding-constants" class="md-nav__link">
     <span class="md-ellipsis">
       
-        decode_gid
+        GID encoding constants
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#tiledata" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        TileData
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tiledpy.tileset.TileData" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        TileData
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -991,1062 +959,203 @@
 
 
 <h1 id="tileset">Tileset<a class="headerlink" href="#tileset" title="Permanent link">&para;</a></h1>
-<p><code>tiledpy.Tileset</code> loads a spritesheet image with Pillow, crops individual tile
-sprites, and converts them to <code>pygame.Surface</code> objects with a two-level cache.</p>
-<p>You rarely need to construct a <code>Tileset</code> manually — <code>TiledMap</code> builds them
-automatically from the <code>.tmx</code> / <code>.tsx</code> file.</p>
+<p><code>Tileset</code> loads a spritesheet image with Pillow, crops individual tile sprites,
+and converts them to <code>pygame.Surface</code> objects with a two-level cache (PIL + pygame).</p>
+<p>You rarely construct a <code>Tileset</code> manually — <code>Parser.load()</code> builds them from
+the <code>.tmx</code> / <code>.tmj</code> / <code>.tsx</code> file automatically.</p>
 <hr />
 <h2 id="tileset_1">Tileset<a class="headerlink" href="#tileset_1" title="Permanent link">&para;</a></h2>
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="tiledpy.tileset.Tileset" class="doc doc-heading">
-            <code>tiledpy.tileset.Tileset</code>
-
-
-<a href="#tiledpy.tileset.Tileset" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents first">
-
-
-
-        <p>A tileset backed by a spritesheet image.</p>
-<p>Uses Pillow to crop individual tile images from the sheet and
-converts them to <code>pygame.Surface</code> objects on demand. Results are
-cached at both the Pillow level (raw crop) and the pygame level
-(surface per flip/rotation flags).</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>name</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tileset name as declared in the TMX/TSX.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>firstgid</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>First global tile ID assigned to this tileset.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>image_path</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Absolute path to the spritesheet image file.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>tile_width</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Width of each tile in pixels.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>tile_height</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Height of each tile in pixels.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>columns</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Number of tile columns in the spritesheet.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>tilecount</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Total number of tiles in the tileset.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>spacing</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Pixels between adjacent tiles, by default <code>0</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>0</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>margin</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Pixels around the outer edge of the sheet, by default <code>0</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>0</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>tile_data</code>
-            </td>
-            <td>
-                  <code><span title="dict">dict</span>[<span title="int">int</span>, <a class="autorefs autorefs-internal" title="tiledpy.tileset.TileData
-
-
-  
-      dataclass
-  " href="#tiledpy.tileset.TileData">TileData</a>] or None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Per-tile metadata keyed by local ID, by default <code>None</code>.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.tileset.Tileset.get_tile_image" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_tile_image</span><span class="p">(</span><span class="n">local_id</span><span class="p">)</span></code>
-
-<a href="#tiledpy.tileset.Tileset.get_tile_image" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return the RGBA PIL crop of the tile at <code>local_id</code>.</p>
-<p>The result is cached in an internal PIL cache — subsequent
-calls for the same <code>local_id</code> are free.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>local_id</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Zero-based local tile index within the tileset.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="PIL.Image.Image">Image</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>RGBA image of the tile.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.tileset.Tileset.is_empty_tile" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">is_empty_tile</span><span class="p">(</span><span class="n">local_id</span><span class="p">)</span></code>
-
-<a href="#tiledpy.tileset.Tileset.is_empty_tile" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return <code>True</code> if the tile is fully transparent.</p>
-<p>Checks whether the maximum alpha value across all pixels is 0.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>local_id</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Zero-based local tile index.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p><code>True</code> if every pixel has alpha = 0.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.tileset.Tileset.get_dominant_color" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_dominant_color</span><span class="p">(</span><span class="n">local_id</span><span class="p">)</span></code>
-
-<a href="#tiledpy.tileset.Tileset.get_dominant_color" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return the average RGB color of all non-transparent pixels.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>local_id</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Zero-based local tile index.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="tuple">tuple</span>[<span title="int">int</span>, <span title="int">int</span>, <span title="int">int</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p><code>(r, g, b)</code> average color. Returns <code>(0, 0, 0)</code> if the
-tile has no non-transparent pixels.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.tileset.Tileset.get_pygame_surface" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_pygame_surface</span><span class="p">(</span><span class="n">local_id</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-<a href="#tiledpy.tileset.Tileset.get_pygame_surface" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return a pygame.Surface for the given tile with flip/rotation applied.</p>
-<p>The surface is cached by <code>(local_id, flip_h, flip_v, flip_d)</code>
-— subsequent calls for the same combination are instant dict
-lookups.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>local_id</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Zero-based local tile index.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>flags</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="tiledpy.tileset.TileFlags
-
-
-  
-      dataclass
-  " href="#tiledpy.tileset.TileFlags">TileFlags</a> or None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Flip/rotation flags to apply, by default no transforms.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="pygame.Surface">Surface</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile surface with <code>convert_alpha()</code> applied and the
-requested transformations.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.tileset.Tileset.clear_pygame_cache" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">clear_pygame_cache</span><span class="p">()</span></code>
-
-<a href="#tiledpy.tileset.Tileset.clear_pygame_cache" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Clear the per-instance pygame surface cache.</p>
-<p>Call this after resizing the window or changing the scale
-factor to force surfaces to be rebuilt at the new resolution.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.tileset.Tileset.contains_gid" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">contains_gid</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span></code>
-
-<a href="#tiledpy.tileset.Tileset.contains_gid" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return <code>True</code> if the global GID belongs to this tileset.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>gid</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Global tile ID to test.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p><code>True</code> if <code>firstgid &lt;= gid &lt; firstgid + tilecount</code>.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="tiledpy.tileset.Tileset.global_to_local" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">global_to_local</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span></code>
-
-<a href="#tiledpy.tileset.Tileset.global_to_local" class="headerlink" title="Permanent link">&para;</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Convert a global GID to a local (0-based) tile ID.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>gid</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Global tile ID.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Local tile index: <code>gid - firstgid</code>.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
-
-</div><hr />
-<h2 id="tileflags">TileFlags<a class="headerlink" href="#tileflags" title="Permanent link">&para;</a></h2>
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="tiledpy.tileset.TileFlags" class="doc doc-heading">
-            <code>tiledpy.tileset.TileFlags</code>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
-  </span>
-
-<a href="#tiledpy.tileset.TileFlags" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents first">
-
-
-
-        <p>Flip and rotation flags decoded from a raw Tiled GID.</p>
-
-
-<p><span class="doc-section-title">Attributes:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileFlags.flip_h">flip_h</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Horizontal flip flag (GID bit <code>0x80000000</code>).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileFlags.flip_v">flip_v</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Vertical flip flag (GID bit <code>0x40000000</code>).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileFlags.flip_d">flip_d</span></code></td>
-            <td>
-                  <code><span title="bool">bool</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Diagonal flip flag (GID bit <code>0x20000000</code>); used for 90°
-rotation when combined with <code>flip_h</code> or <code>flip_v</code>.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div><hr />
-<h2 id="decode_gid">decode_gid<a class="headerlink" href="#decode_gid" title="Permanent link">&para;</a></h2>
-
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="tiledpy.tileset.decode_gid" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">tiledpy</span><span class="o">.</span><span class="n">tileset</span><span class="o">.</span><span class="n">decode_gid</span><span class="p">(</span><span class="n">raw_gid</span><span class="p">)</span></code>
-
-<a href="#tiledpy.tileset.decode_gid" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents first">
-
-        <p>Separate the real GID from Tiled's flip/rotation flags.</p>
-<p>Tiled encodes flip and rotation by setting the three highest bits
-of the 32-bit GID. This function extracts those flags and returns
-the clean GID.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>raw_gid</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Raw 32-bit GID as stored in a TileLayer (may include flag bits).</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="tuple">tuple</span>[<span title="int">int</span>, <a class="autorefs autorefs-internal" title="tiledpy.tileset.TileFlags
-
-
-  
-      dataclass
-  " href="#tiledpy.tileset.TileFlags">TileFlags</a>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p><code>(real_gid, flags)</code> where <code>real_gid</code> has the flag bits
-cleared and <code>flags</code> is a :class:<code>TileFlags</code> instance.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<p><span class="doc-section-title">Examples:</span></p>
-    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">real_gid</span><span class="p">,</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">decode_gid</span><span class="p">(</span><span class="mh">0x80000005</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">real_gid</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="go">5</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">flags</span><span class="o">.</span><span class="n">flip_h</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="go">True</span>
+<h3 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td><code>str</code></td>
+<td>Tileset name</td>
+</tr>
+<tr>
+<td><code>firstgid</code></td>
+<td><code>int</code></td>
+<td>First global tile ID</td>
+</tr>
+<tr>
+<td><code>tile_width</code></td>
+<td><code>int</code></td>
+<td>Width of each tile in pixels</td>
+</tr>
+<tr>
+<td><code>tile_height</code></td>
+<td><code>int</code></td>
+<td>Height of each tile in pixels</td>
+</tr>
+<tr>
+<td><code>columns</code></td>
+<td><code>int</code></td>
+<td>Number of tile columns in the spritesheet</td>
+</tr>
+<tr>
+<td><code>tilecount</code></td>
+<td><code>int</code></td>
+<td>Total number of tiles</td>
+</tr>
+<tr>
+<td><code>spacing</code></td>
+<td><code>int</code></td>
+<td>Pixels between adjacent tiles</td>
+</tr>
+<tr>
+<td><code>margin</code></td>
+<td><code>int</code></td>
+<td>Pixels around the sheet edge</td>
+</tr>
+<tr>
+<td><code>tile_data</code></td>
+<td><code>dict[int, TileMeta]</code></td>
+<td>Per-tile metadata keyed by local ID</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pygame-surface">Pygame surface<a class="headerlink" href="#pygame-surface" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy.layer.tileset</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileFlags</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">flags</span> <span class="o">=</span> <span class="n">TileFlags</span><span class="p">(</span><span class="n">flip_h</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">flip_v</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flip_d</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Returns a cached pygame.Surface with flip/rotation applied</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">surf</span> <span class="o">=</span> <span class="n">tileset</span><span class="o">.</span><span class="n">get_pygame_surface</span><span class="p">(</span><span class="n">local_id</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">flags</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Clear pygame surface cache (call after scale changes)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">tileset</span><span class="o">.</span><span class="n">clear_pygame_cache</span><span class="p">()</span>
 </span></code></pre></div>
-
-
-    </div>
-
-</div><hr />
-<h2 id="tiledata">TileData<a class="headerlink" href="#tiledata" title="Permanent link">&para;</a></h2>
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="tiledpy.tileset.TileData" class="doc doc-heading">
-            <code>tiledpy.tileset.TileData</code>
-
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
-  </span>
-
-<a href="#tiledpy.tileset.TileData" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents first">
-
-
-
-        <p>Per-tile metadata parsed from a TSX <code>&lt;tile&gt;</code> element.</p>
-
-
-<p><span class="doc-section-title">Attributes:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileData.local_id">local_id</span></code></td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Zero-based local tile ID within the tileset.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileData.tile_class">tile_class</span></code></td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The Tiled <code>class</code> attribute of the tile (also known as <code>type</code>
-in older Tiled versions).  Empty string if not set.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileData.properties">properties</span></code></td>
-            <td>
-                  <code><span title="dict">dict</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Custom properties defined in Tiled for this tile.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileData.collision_objects">collision_objects</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Collision rectangles, each with keys <code>x</code>, <code>y</code>,
-<code>width</code>, and <code>height</code> (in pixels).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileData.animation">animation</span></code></td>
-            <td>
-                  <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Animation frames, each with keys <code>tileid</code> (int) and
-<code>duration</code> (int, milliseconds).</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileData.width">width</span></code></td>
-            <td>
-                  <code><span title="int">int</span> or None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile width in pixels, or <code>None</code> if using the tileset default.</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code><span title="tiledpy.tileset.TileData.height">height</span></code></td>
-            <td>
-                  <code><span title="int">int</span> or None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Tile height in pixels, or <code>None</code> if using the tileset default.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
+<h3 id="pil-helpers">PIL helpers<a class="headerlink" href="#pil-helpers" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># RGBA crop of the tile (cached)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">img</span> <span class="o">=</span> <span class="n">tileset</span><span class="o">.</span><span class="n">get_tile_image</span><span class="p">(</span><span class="n">local_id</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># True if every pixel is fully transparent</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">empty</span> <span class="o">=</span> <span class="n">tileset</span><span class="o">.</span><span class="n">is_empty_tile</span><span class="p">(</span><span class="n">local_id</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Average RGB of non-transparent pixels</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">tileset</span><span class="o">.</span><span class="n">get_dominant_color</span><span class="p">(</span><span class="n">local_id</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="gid-utilities">GID utilities<a class="headerlink" href="#gid-utilities" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">tileset</span><span class="o">.</span><span class="n">contains_gid</span><span class="p">(</span><span class="n">gid</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>      <span class="c1"># → bool: firstgid &lt;= gid &lt; firstgid + tilecount</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">tileset</span><span class="o">.</span><span class="n">global_to_local</span><span class="p">(</span><span class="n">gid</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>   <span class="c1"># → int: gid - firstgid</span>
+</span></code></pre></div>
+<hr />
+<h2 id="tilemeta">TileMeta<a class="headerlink" href="#tilemeta" title="Permanent link">&para;</a></h2>
+<p>Per-tile metadata parsed from a TSX <code>&lt;tile&gt;</code> element.
+Accessed via <code>TileData.meta</code>.</p>
+<h3 id="attributes_1">Attributes<a class="headerlink" href="#attributes_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>local_id</code></td>
+<td><code>int</code></td>
+<td>Zero-based local tile ID</td>
+</tr>
+<tr>
+<td><code>tile_class</code></td>
+<td><code>str</code></td>
+<td>Tiled <code>class</code> attribute</td>
+</tr>
+<tr>
+<td><code>properties</code></td>
+<td><code>dict</code></td>
+<td>Custom properties</td>
+</tr>
+<tr>
+<td><code>collision_objects</code></td>
+<td><code>list[dict]</code></td>
+<td>Collision rects: <code>[{x, y, width, height}, ...]</code></td>
+</tr>
+<tr>
+<td><code>animation</code></td>
+<td><code>list[dict]</code></td>
+<td>Animation frames: <code>[{tileid, duration}, ...]</code> (duration in ms)</td>
+</tr>
+<tr>
+<td><code>width</code></td>
+<td><code>int \| None</code></td>
+<td>Override tile width (None = use tileset default)</td>
+</tr>
+<tr>
+<td><code>height</code></td>
+<td><code>int \| None</code></td>
+<td>Override tile height (None = use tileset default)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">tile</span> <span class="o">=</span> <span class="n">tmap</span><span class="o">.</span><span class="n">get_layer</span><span class="p">(</span><span class="s2">&quot;ground&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get_tile</span><span class="p">(</span><span class="n">tx</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ty</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">if</span> <span class="n">tile</span> <span class="ow">and</span> <span class="n">tile</span><span class="o">.</span><span class="n">meta</span><span class="p">:</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">tile_class</span><span class="p">)</span>         <span class="c1"># e.g. &quot;ground_wet&quot;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">properties</span><span class="p">)</span>         <span class="c1"># custom props dict</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">collision_objects</span><span class="p">)</span>  <span class="c1"># list of rects</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">tile</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">animation</span><span class="p">:</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        <span class="nb">print</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="s2">&quot;tileid&quot;</span><span class="p">],</span> <span class="n">frame</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">])</span>
+</span></code></pre></div>
+<hr />
+<h2 id="tileflags">TileFlags<a class="headerlink" href="#tileflags" title="Permanent link">&para;</a></h2>
+<p>Flip and rotation flags decoded from the upper 3 bits of a raw Tiled GID.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Bit</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flip_h</code></td>
+<td><code>0x80000000</code></td>
+<td>Horizontal flip</td>
+</tr>
+<tr>
+<td><code>flip_v</code></td>
+<td><code>0x40000000</code></td>
+<td>Vertical flip</td>
+</tr>
+<tr>
+<td><code>flip_d</code></td>
+<td><code>0x20000000</code></td>
+<td>Diagonal flip (used for 90° rotation)</td>
+</tr>
+</tbody>
+</table>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy.layer.tileset</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileFlags</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">flags</span> <span class="o">=</span> <span class="n">TileFlags</span><span class="p">(</span><span class="n">flip_h</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">flip_v</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flip_d</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="decode_gid">decode_gid<a class="headerlink" href="#decode_gid" title="Permanent link">&para;</a></h2>
+<p>Separates the real GID from Tiled's flip/rotation flag bits.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy.layer.tileset</span><span class="w"> </span><span class="kn">import</span> <span class="n">decode_gid</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">real_gid</span><span class="p">,</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">decode_gid</span><span class="p">(</span><span class="n">raw_gid</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># real_gid = raw_gid &amp; 0x1FFFFFFF</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># flags.flip_h, flags.flip_v, flags.flip_d = upper 3 bits</span>
+</span></code></pre></div>
+<h3 id="gid-encoding-constants">GID encoding constants<a class="headerlink" href="#gid-encoding-constants" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">tiledpy.layer.tileset</span><span class="w"> </span><span class="kn">import</span> <span class="n">GID_FLIP_H</span><span class="p">,</span> <span class="n">GID_FLIP_V</span><span class="p">,</span> <span class="n">GID_FLIP_D</span><span class="p">,</span> <span class="n">GID_MASK</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># GID_FLIP_H = 0x80000000</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># GID_FLIP_V = 0x40000000</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># GID_FLIP_D = 0x20000000</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># GID_MASK   = 0x1FFFFFFF</span>
+</span></code></pre></div>
 
 
 
