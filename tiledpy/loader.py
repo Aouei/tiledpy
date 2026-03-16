@@ -374,6 +374,13 @@ class TiledMap:
     # ------------------------------------------------------------------
 
     def _parse(self, path: str) -> None:
+        ext = os.path.splitext(path)[1].lower()
+        if ext in (".tmj", ".json"):
+            self._parse_json(path)
+        else:
+            self._parse_xml(path)
+
+    def _parse_xml(self, path: str) -> None:
         tree = ET.parse(path)
         root = tree.getroot()
 
@@ -405,6 +412,99 @@ class TiledMap:
         for layer in self.layers:
             if isinstance(layer, TileLayer):
                 layer._tilesets = self.tilesets
+
+    def _parse_json(self, path: str) -> None:
+        import json
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+
+        self.orientation      = data.get("orientation", "orthogonal")
+        self.render_order     = data.get("renderorder", "right-down")
+        self.width            = int(data.get("width", 0))
+        self.height           = int(data.get("height", 0))
+        self.tile_width       = int(data.get("tilewidth", 16))
+        self.tile_height      = int(data.get("tileheight", 16))
+        self.infinite         = bool(data.get("infinite", False))
+        self.background_color = data.get("backgroundcolor")
+        self.properties       = _parse_properties_json(data.get("properties", []))
+
+        for ts_ref in data.get("tilesets", []):
+            firstgid = int(ts_ref["firstgid"])
+            source   = ts_ref.get("source")
+            if source:
+                tsx_path = os.path.normpath(os.path.join(self.base_dir, source))
+                ts = self._parse_tsx(firstgid, tsx_path)
+                if ts is not None:
+                    self.tilesets.append(ts)
+
+        self.tilesets.sort(key=lambda t: t.firstgid)
+
+        for layer in data.get("layers", []):
+            ltype = layer.get("type")
+            if ltype == "tilelayer":
+                self.layers.append(self._parse_tile_layer_json(layer))
+            elif ltype == "objectgroup":
+                self.layers.append(self._parse_object_layer_json(layer))
+
+        for layer in self.layers:
+            if isinstance(layer, TileLayer):
+                layer._tilesets = self.tilesets
+
+    def _parse_tile_layer_json(self, data: dict) -> TileLayer:
+        layer = TileLayer(
+            id=int(data.get("id", 0)),
+            name=data.get("name", ""),
+            visible=bool(data.get("visible", True)),
+            opacity=float(data.get("opacity", 1.0)),
+            offset_x=float(data.get("offsetx", 0.0)),
+            offset_y=float(data.get("offsety", 0.0)),
+            properties=_parse_properties_json(data.get("properties", [])),
+        )
+        flat = data.get("data", [])
+        if flat:
+            w = int(data.get("width",  self.width))
+            h = int(data.get("height", self.height))
+            layer.load_from_flat(flat, w, h)
+        return layer
+
+    def _parse_object_layer_json(self, data: dict) -> ObjectLayer:
+        objects = []
+        for obj in data.get("objects", []):
+            raw_gid      = obj.get("gid")
+            object_class = obj.get("class", obj.get("type", ""))
+            if not object_class and raw_gid is not None:
+                clean_gid, _ = decode_gid(raw_gid)
+                ts = max(
+                    (t for t in self.tilesets if t.firstgid <= clean_gid),
+                    key=lambda t: t.firstgid,
+                    default=None,
+                )
+                if ts is not None:
+                    td = ts.tile_data.get(clean_gid - ts.firstgid)
+                    if td:
+                        object_class = td.tile_class
+            objects.append(TileObject(
+                id=int(obj.get("id", 0)),
+                name=obj.get("name", ""),
+                object_class=object_class,
+                x=float(obj.get("x", 0)),
+                y=float(obj.get("y", 0)),
+                width=float(obj.get("width", 0)),
+                height=float(obj.get("height", 0)),
+                rotation=float(obj.get("rotation", 0)),
+                visible=bool(obj.get("visible", True)),
+                properties=_parse_properties_json(obj.get("properties", [])),
+                gid=raw_gid,
+            ))
+        return ObjectLayer(
+            id=int(data.get("id", 0)),
+            name=data.get("name", ""),
+            visible=bool(data.get("visible", True)),
+            opacity=float(data.get("opacity", 1.0)),
+            color=data.get("color"),
+            objects=objects,
+            properties=_parse_properties_json(data.get("properties", [])),
+        )
 
     def _parse_tileset_ref(self, elem: ET.Element) -> Tileset | None:
         firstgid = int(elem.attrib.get("firstgid", 1))
@@ -619,6 +719,24 @@ def _parse_properties(elem: ET.Element | None) -> dict:
             result[name] = float(value)
         elif ptype == "bool":
             result[name] = value.lower() == "true"
+        else:
+            result[name] = value
+    return result
+
+
+def _parse_properties_json(props: list) -> dict:
+    """Parse a Tiled JSON ``properties`` array into a plain dict."""
+    result = {}
+    for p in props:
+        name  = p["name"]
+        ptype = p.get("type", "string")
+        value = p.get("value", "")
+        if ptype == "int":
+            result[name] = int(value)
+        elif ptype == "float":
+            result[name] = float(value)
+        elif ptype == "bool":
+            result[name] = bool(value)
         else:
             result[name] = value
     return result

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__obsidian-mcp__new_folder",
+      "mcp__obsidian-mcp__new_file",
+      "mcp__obsidian-mcp__read_file",
+      "mcp__obsidian-mcp__delete_file",
+      "mcp__obsidian-mcp__read_folder",
+      "Bash(find c:UserssergiDocumentsrepostiledpy -type f \\\\\\(-name *test* -o -name *example* -o -name *demo* \\\\\\))",
+      "Bash(python3 -c \":*)",
+      "Bash(python3 -c \"from demo_punyworld import resolve_animated_local_id; from tiledpy import TiledMap; tmap = TiledMap\\(r''C:/Users/sergi/Downloads/PUNY_WORLD_v1/PUNY_WORLD_v1/PUNY_WORLD_v1/Tiled/samplemap1.tmj''\\); ts = tmap.tilesets[0]; print\\(''t=0ms:'', resolve_animated_local_id\\(ts, 270, 0\\)\\); print\\(''t=150ms:'', resolve_animated_local_id\\(ts, 270, 150\\)\\); print\\(''t=250ms:'', resolve_animated_local_id\\(ts, 270, 250\\)\\); print\\(''t=350ms:'', resolve_animated_local_id\\(ts, 270, 350\\)\\)\")"
+    ]
+  }
+}
