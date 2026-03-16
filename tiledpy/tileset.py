@@ -101,6 +101,12 @@ class TileData:
         Tile width in pixels, or ``None`` if using the tileset default.
     height : int or None
         Tile height in pixels, or ``None`` if using the tileset default.
+    map_x : int or None
+        Tile X coordinate on the map (tile units), or ``None`` if this
+        instance was not obtained from a layer query.
+    map_y : int or None
+        Tile Y coordinate on the map (tile units), or ``None`` if this
+        instance was not obtained from a layer query.
     """
 
     local_id: int
@@ -110,6 +116,8 @@ class TileData:
     animation: list[dict] = field(default_factory=list)
     width: int | None = None
     height: int | None = None
+    map_x: int | None = None
+    map_y: int | None = None
 
 
 class Tileset:

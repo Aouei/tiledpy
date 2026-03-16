@@ -421,6 +421,47 @@ class TileLayer:
 
         return result
 
+    def get_animated_tiles(self) -> list[TileData]:
+        """Return all unique :class:`~tiledpy.tileset.TileData` objects that have animation.
+
+        Iterates over every non-empty tile in the layer, resolves the
+        corresponding tileset metadata, and collects tiles whose
+        :attr:`~tiledpy.tileset.TileData.animation` list is non-empty.
+        Duplicate tile definitions (same tile placed at multiple positions)
+        are returned only once.
+
+        Returns
+        -------
+        list[TileData]
+            Unique animated tile definitions present in this layer.
+            Empty list if no animated tile is found.
+
+        Examples
+        --------
+        >>> animated = layer.get_animated_tiles()
+        >>> for tile in animated:
+        ...     print(tile.local_id, tile.animation)
+        """
+        from dataclasses import replace
+
+        result: list[TileData] = []
+
+        for tx, ty, raw_gid in self.iter_tiles():
+            gid, _ = decode_gid(raw_gid)
+            if gid == 0:
+                continue
+
+            tileset = self.get_tileset_by_gid(gid)
+            if tileset is None:
+                continue
+
+            local_id = tileset.global_to_local(gid)
+            tile_data = tileset.tile_data.get(local_id)
+            if tile_data is not None and tile_data.animation:
+                result.append(replace(tile_data, map_x=tx, map_y=ty))
+
+        return result
+
     def get_tileset_by_gid(self, gid : int) -> Tileset | None:
         tileset = None
 
